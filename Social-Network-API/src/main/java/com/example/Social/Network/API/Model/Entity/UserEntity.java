@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 
 @Table(name = "user")
 @NoArgsConstructor
@@ -30,5 +31,15 @@ public class UserEntity implements Serializable {
     @JsonProperty
     @Column(name = "uuid")
     private String uuid;
+
+    @JsonProperty
+    @Column(name = "avatar")
+    private String avatar;
+
+    @JsonProperty
+    @Column(name = "create_date")
+    private Date created;
+
+
 
 }
