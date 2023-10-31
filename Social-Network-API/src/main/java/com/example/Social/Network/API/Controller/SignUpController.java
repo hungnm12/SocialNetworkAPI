@@ -21,18 +21,18 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @Controller
 @RequestMapping("/apivua")
-public class SpController {
-    @AutowiredignU
+public class SignUpController {
+    @Autowired
     private SignUpService signUpService;
 
-    @PostMapping("/signup")
-    public GeneralResponse signUp(HttpRequest httpRequest,@RequestBody SignUpReqDto signUpReqDto) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+    @PostMapping("/register")
+    public GeneralResponse signUp(@RequestBody SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
         try {
-return signUpService.signUp(httpRequest, signUpReqDto);
+                return signUpService.signUp( signUpReqDto);
         }
         catch (ResponseException e) {
-            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage());
         }
 
     }

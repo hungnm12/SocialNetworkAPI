@@ -22,13 +22,12 @@ public class SignUpServiceImpl implements SignUpService {
 
     @Autowired
     private SignUpRepo signUpRepo;
-
     @Autowired
     private SignUpService signUpService;
 
 
     @Override
-    public GeneralResponse signUp(HttpRequest request, SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+    public GeneralResponse signUp( SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
         UserEntity user = new UserEntity();
         signUpRepo.save(user);
 
@@ -68,6 +67,7 @@ public class SignUpServiceImpl implements SignUpService {
         }
         return signUpReqDto.getPassword().matches(EMAIL_REGEX);
     }
+
 
 
 
