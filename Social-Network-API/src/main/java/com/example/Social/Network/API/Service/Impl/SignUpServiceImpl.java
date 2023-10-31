@@ -39,12 +39,35 @@ public class SignUpServiceImpl implements SignUpService {
                 && ((signUpReqDto.getPassword().isEmpty()) || signUpReqDto.getPassword() == null)){
             return new GeneralResponse(null,"Your email and password are not filled in yet", "");
         }
+        if (isValidEmail(signUpReqDto)){
+            return new GeneralResponse(null,"","");
+        }
+        if (isValidPassword(signUpReqDto)){
+            return new GeneralResponse(null,"","");
+        }
 
         else
 
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, signUpReqDto);
+
     }
 
+    boolean isValidEmail(SignUpReqDto signUpReqDto){
+        final String EMAIL_REGEX = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
+        if (signUpReqDto.getEmail() == null || signUpReqDto.getEmail().isEmpty()){
+            return false;
+        }
+        return signUpReqDto.getEmail().matches(EMAIL_REGEX);
+
+    }
+
+    boolean isValidPassword(SignUpReqDto signUpReqDto) {
+        final String EMAIL_REGEX = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
+        if (signUpReqDto.getPassword() == null || signUpReqDto.getPassword().isEmpty()){
+            return false;
+        }
+        return signUpReqDto.getPassword().matches(EMAIL_REGEX);
+    }
 
 
 

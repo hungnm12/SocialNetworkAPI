@@ -11,4 +11,5 @@ import java.util.concurrent.TimeoutException;
 public interface SignUpService {
     GeneralResponse signUp(HttpRequest request, SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
+
 }
