@@ -5,26 +5,24 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@Getter
 @ToString
 public class GeneralResponse {
 
     //Gen success/fail code
 
-    @Getter
     @Setter
     @JsonProperty("code")
     private Integer code;
 
     //Gen message
 
-    @Getter
     @Setter
     @JsonProperty("message")
     private String message;
 
     //Gen data
 
-    @Getter
     @Setter
     @JsonProperty("data")
     private Object data;
@@ -35,12 +33,15 @@ public class GeneralResponse {
         this.message = message;
         this.data = data;
     }
-
+    public GeneralResponse(Integer code, String message){
+        this.code = code;
+        this.message= message;
+    }
     public GeneralResponse() {
 
     }
 
 
-
-
+    public GeneralResponse(int httpNoContent, String s, String message, Object o) {
+    }
 }

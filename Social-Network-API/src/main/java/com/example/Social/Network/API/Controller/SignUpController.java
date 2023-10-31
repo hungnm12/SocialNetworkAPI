@@ -21,15 +21,16 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @Controller
 @RequestMapping("/user/signup")
-public class SpController {
-    @AutowiredignU
+public class SignUpController {
+
+    @Autowired
     private SignUpService signUpService;
 
     @PostMapping("/signup")
     public GeneralResponse signUp(HttpRequest httpRequest,@RequestBody SignUpReqDto signUpReqDto) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
 
         try {
-return signUpService.signUp(httpRequest, signUpReqDto);
+            return signUpService.signUp(httpRequest, signUpReqDto);
         }
         catch (ResponseException e) {
             return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
