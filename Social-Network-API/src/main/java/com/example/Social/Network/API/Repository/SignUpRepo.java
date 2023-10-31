@@ -15,5 +15,7 @@ import java.util.concurrent.TimeoutException;
 @Repository
 public interface SignUpRepo extends JpaRepository<UserEntity,Long> {
 
+    boolean exisitedbyEmail(String email);
 
+    boolean isValidEmail(String email);
 }
