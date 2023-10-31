@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Controller
-@RequestMapping("/apivua")
+@RequestMapping("/user/signup")
 public class SpController {
     @AutowiredignU
     private SignUpService signUpService;
