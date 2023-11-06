@@ -5,8 +5,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 
 @Table(name = "user")
@@ -14,7 +19,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @Entity
-public class UserEntity implements Serializable {
+public class UserEntity implements Serializable, UserDetails {
     @Column
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,8 +43,38 @@ public class UserEntity implements Serializable {
 
     @JsonProperty
     @Column(name = "create_date")
-    private Date created;
+    private LocalDateTime created;
 
+    @JsonProperty
+    private boolean active= false;
 
-
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singleton(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "User";
+            }
+        });
+    }
+    @Override
+    public String getUsername() {
+        return email;
+    }
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isEnabled() {
+        return active;
+    }
 }

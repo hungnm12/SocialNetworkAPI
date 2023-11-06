@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Controller
-@RequestMapping("/user/signup")
+@RequestMapping("/user")
 public class SignUpController {
 
     @Autowired
