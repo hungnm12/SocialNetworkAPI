@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.net.http.HttpRequest;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -54,7 +56,7 @@ public class SignUpServiceImpl implements SignUpService {
         UserEntity user = new UserEntity();
         user.setEmail(signUpReqDto.getEmail());
         user.setPassword(passwordEncoder.encode(signUpReqDto.getPassword()));
-        user.setCreated(LocalDateTime.now());
+        user.setCreated(Date.from(Instant.now()));
         user.setActive(true);
         signUpRepo.save(user);
 

@@ -20,32 +20,32 @@ import java.util.Date;
 @AllArgsConstructor
 @Entity
 public class UserEntity implements Serializable, UserDetails {
-    @Column
+    @Column(name = "id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
-    @JsonProperty
+
     @Column(name = "email")
     private String email;
 
-    @JsonProperty
+
     @Column(name = "password")
     private String password;
 
-    @JsonProperty
+
     @Column(name = "uuid")
     private String uuid;
 
-    @JsonProperty
+
     @Column(name = "avatar")
     private String avatar;
 
-    @JsonProperty
+
     @Column(name = "create_date")
     private Date created;
 
-    @JsonProperty
+    @Column(name = "active")
     private boolean active= false;
 
     @Override
