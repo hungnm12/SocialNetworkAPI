@@ -15,7 +15,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Entity
 public class UserEntity implements Serializable {
-    @Column
+    @Column(name = "id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
@@ -40,6 +40,17 @@ public class UserEntity implements Serializable {
     @Column(name = "create_date")
     private Date created;
 
+    @JsonProperty
+    @Column(name = "active")
+    private String active;
+
+    @JsonProperty
+    @Column(name = "coins")
+    private String coins;
+
+    @JsonProperty
+    @Column(name = "username")
+    private String username;
 
 
 }

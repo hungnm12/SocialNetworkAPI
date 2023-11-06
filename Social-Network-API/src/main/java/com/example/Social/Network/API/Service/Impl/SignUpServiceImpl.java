@@ -10,6 +10,9 @@ import com.example.Social.Network.API.Repository.SignUpRepo;
 import com.example.Social.Network.API.Service.SignUpService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.net.http.HttpRequest;
@@ -18,34 +21,39 @@ import java.util.concurrent.TimeoutException;
 
 @Service
 @Slf4j
+
 public class SignUpServiceImpl implements SignUpService {
 
     @Autowired
+//    @Qualifier("signupRepo")
     private SignUpRepo signUpRepo;
-    @Autowired
-    private SignUpService signUpService;
-
+//
+//    @Autowired
+//    private SignUpService signUpService;
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public GeneralResponse signUp( SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+
+
+        if (signUpRepo.existsByEmail(signUpReqDto.getEmail())){
+            return new GeneralResponse(ResponseCode.USER_EXISTED, ResponseMessage.USER_EXISTED, "There is an account with that email address"+ signUpReqDto.getEmail());
+        }
+
+        else if (signUpReqDto.getEmail().isEmpty() && signUpReqDto.getPassword().isEmpty()){
+            return new GeneralResponse(null,"Your email and password are not filled in yet", "" );
+        }
+        else if (isValidEmail(signUpReqDto)){
+            return new GeneralResponse(null,"Your email is not valid","");
+        }
+        else if (isValidPassword(signUpReqDto)){
+            return new GeneralResponse(null,"Your password is not valid","");
+        }
+
         UserEntity user = new UserEntity();
+        user.setEmail(signUpReqDto.getEmail());
+        user.setPassword(passwordEncoder.encode(signUpReqDto.getPassword()));
         signUpRepo.save(user);
-
-        if (signUpRepo.exisitedbyEmail(signUpReqDto.getEmail())){
-            return new GeneralResponse(ResponseCode.USER_EXISTED, ResponseMessage.USER_EXISTED, "");
-        }
-        if ((signUpReqDto.getEmail().isEmpty() || signUpReqDto.getEmail() == null)
-                && ((signUpReqDto.getPassword().isEmpty()) || signUpReqDto.getPassword() == null)){
-            return new GeneralResponse(null,"Your email and password are not filled in yet", "");
-        }
-        if (isValidEmail(signUpReqDto)){
-            return new GeneralResponse(null,"","");
-        }
-        if (isValidPassword(signUpReqDto)){
-            return new GeneralResponse(null,"","");
-        }
-
-        else
 
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, signUpReqDto);
 
@@ -61,12 +69,17 @@ public class SignUpServiceImpl implements SignUpService {
     }
 
     boolean isValidPassword(SignUpReqDto signUpReqDto) {
-        final String EMAIL_REGEX = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
+        final String EMAIL_REGEX = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]";
+        final int MIN_LENGTH = 8;
         if (signUpReqDto.getPassword() == null || signUpReqDto.getPassword().isEmpty()){
+            return false;
+        }
+        if (signUpReqDto.getPassword().length() < MIN_LENGTH){
             return false;
         }
         return signUpReqDto.getPassword().matches(EMAIL_REGEX);
     }
+
 
 
 
