@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.net.http.HttpRequest;
+import java.time.LocalDateTime;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -53,12 +54,18 @@ public class SignUpServiceImpl implements SignUpService {
         UserEntity user = new UserEntity();
         user.setEmail(signUpReqDto.getEmail());
         user.setPassword(passwordEncoder.encode(signUpReqDto.getPassword()));
+        user.setCreated(LocalDateTime.now());
+        user.setActive(true);
         signUpRepo.save(user);
 
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, signUpReqDto);
 
     }
 
+
+
+
+//    ---------------------------------------------
     boolean isValidEmail(SignUpReqDto signUpReqDto){
         final String EMAIL_REGEX = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
         if (signUpReqDto.getEmail() == null || signUpReqDto.getEmail().isEmpty()){
@@ -82,7 +89,10 @@ public class SignUpServiceImpl implements SignUpService {
 
 
 
-
+    @Override
+    public String createVerificationTokenForUser(UserEntity user) {
+        return null;
+    }
 
 
 

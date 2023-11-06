@@ -3,6 +3,7 @@ package com.example.Social.Network.API.Controller;
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
+import com.example.Social.Network.API.Service.Impl.SignUpServiceImpl;
 import com.example.Social.Network.API.Service.SignUpService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +21,11 @@ import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Controller
-@RequestMapping("/user/signup")
+@RequestMapping("/user")
 public class SignUpController {
 
     @Autowired
-    private SignUpService signUpService;
+    private SignUpServiceImpl signUpService;
 
     @PostMapping("/register")
     public GeneralResponse signUp(@RequestBody SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
