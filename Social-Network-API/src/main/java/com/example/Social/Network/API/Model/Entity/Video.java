@@ -5,20 +5,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
-@Table(name = "post")
+@Table(name = "video")
 @NoArgsConstructor
 @Data
 @AllArgsConstructor
 @Entity
-public class PostEntity implements Serializable {
+public class Video {
     @Column(name = "id")
-    @Id
+    @jakarta.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
-    @Column(name = "name")
-    private String name;
-
+    @Column(name = "url")
+    private String url;
 }

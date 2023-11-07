@@ -48,6 +48,9 @@ public class UserEntity implements Serializable, UserDetails {
     @Column(name = "active")
     private boolean active= false;
 
+    @Column(name = "coins")
+    private Long coins;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(new GrantedAuthority() {
