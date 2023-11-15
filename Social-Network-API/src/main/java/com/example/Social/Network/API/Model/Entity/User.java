@@ -3,6 +3,7 @@ package com.example.Social.Network.API.Model.Entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,14 +13,14 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 
 @Table(name = "user")
 @NoArgsConstructor
 @Data
 @AllArgsConstructor
 @Entity
-public class UserEntity implements Serializable, UserDetails {
+@Builder
+public class User implements Serializable, UserDetails {
     @Column
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

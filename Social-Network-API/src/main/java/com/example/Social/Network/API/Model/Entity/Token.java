@@ -23,7 +23,7 @@ public class Token {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    public  UserEntity user;
+    public User user;
 
     public void setId(Long id) {
         this.id = id;

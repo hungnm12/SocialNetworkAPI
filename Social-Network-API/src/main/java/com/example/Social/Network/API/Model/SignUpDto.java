@@ -1,12 +1,12 @@
 package com.example.Social.Network.API.Model;
 
-import com.example.Social.Network.API.Model.Entity.UserEntity;
+import com.example.Social.Network.API.Model.Entity.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import lombok.Data;
 
 @Data
-public class SignUpDto extends UserEntity {
+public class SignUpDto extends User {
     @JsonProperty
     @Column(name = "email")
     private String email;
