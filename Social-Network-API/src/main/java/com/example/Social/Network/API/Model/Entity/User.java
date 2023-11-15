@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Table(name = "user")
 @NoArgsConstructor
@@ -21,7 +22,7 @@ import java.util.Collections;
 @Entity
 @Builder
 public class User implements Serializable, UserDetails {
-    @Column
+    @Column(name = "user_id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
@@ -35,10 +36,6 @@ public class User implements Serializable, UserDetails {
     private String password;
 
     @JsonProperty
-    @Column(name = "uuid")
-    private String uuid;
-
-    @JsonProperty
     @Column(name = "avatar")
     private String avatar;
 
@@ -47,7 +44,14 @@ public class User implements Serializable, UserDetails {
     private LocalDateTime created;
 
     @JsonProperty
+    @Column(name = "active")
     private boolean active= false;
+
+    @Column(name = "coins")
+    private Integer coins;
+
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
