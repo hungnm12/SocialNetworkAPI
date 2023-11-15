@@ -17,7 +17,6 @@ public class SignUpResDto {
     @JsonProperty
     private String password;
 
-    @JsonProperty
-    private String uuid;
+
 
 }
