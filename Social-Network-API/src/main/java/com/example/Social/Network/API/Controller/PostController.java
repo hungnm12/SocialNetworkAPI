@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
@@ -27,8 +28,8 @@ public class PostController {
     @PostMapping("/add_post")
     public GeneralResponse addPost (
             @RequestParam("token") String token,
-            @RequestParam(required = false)  File image,
-            @RequestParam(required = false) File video,
+            @RequestParam(required = false)  MultipartFile image,
+            @RequestParam(required = false) MultipartFile video,
             @RequestParam("described") String described,
             @RequestParam("status") String status)
             throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {

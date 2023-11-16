@@ -3,9 +3,10 @@ package com.example.Social.Network.API.Service.Impl;
 import com.example.Social.Network.API.Constant.ResponseCode;
 import com.example.Social.Network.API.Constant.ResponseMessage;
 import com.example.Social.Network.API.Exception.ResponseException;
+import com.example.Social.Network.API.Model.Entity.Image;
 import com.example.Social.Network.API.Model.Entity.Post;
 import com.example.Social.Network.API.Model.Entity.User;
-import com.example.Social.Network.API.Model.ResDto.AddPostResDto;
+import com.example.Social.Network.API.Model.Entity.Video;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
@@ -16,10 +17,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
+
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -34,23 +35,24 @@ public class PostServiceImpl implements PostService {
 private PostRepo postRepo;
 
 @Autowired
+private S3Service s3Service;
+@Autowired
 private UserRepo userRepo;
     @Override
     public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
-            throws ResponseException, ExecutionException, InterruptedException, TimeoutException, IOException {
-
-        log.info("[addPost]- start with input: {}", token, described, image, video,status);
-
-
-            byte[] imageBytes = image.getBytes();
-
-
+            throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        image.getOriginalFilename();
+        String url = s3Service.uploadFile(image);
         Post post1 = new Post();
+        Image image1 = new Image();
+        image1.setUrlImage(url);
+        image1.setPost(post1);
+        Video video1 = new Video(url,post1);
+
         post1.setDescribed(described);
         post1.setStatus(status);
-        post1.setImage();
-        post1.setVideo();
-        post1.setUrl(generatePostUrl());
+
+        post1.setUrl(url);
 
         User user = getUserFromToken(token);
         post1.setUser(user);
@@ -81,7 +83,7 @@ private UserRepo userRepo;
         String uuidString = uuid.toString();
 
         // Create a URL using the UUID string
-        String url =  uuidString;
+        String url = "https://example.com/posts/" + uuidString;
 
         return url;
     }

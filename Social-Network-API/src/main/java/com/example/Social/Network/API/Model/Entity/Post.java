@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Table(name = "post")
@@ -16,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 public class Post implements Serializable {
-    @Column(name = "post_id")
+    @Column
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
@@ -34,10 +35,13 @@ public class Post implements Serializable {
     private User user;
 
     @Column(name = "video")
-    private File video;
+    @OneToMany(mappedBy = "post")
+
+    private ArrayList<Video> videos;
 
     @Column(name = "image")
-    private File image;
+    @OneToMany(mappedBy = "post")
+    private ArrayList<Image> images ;
 
 
 
