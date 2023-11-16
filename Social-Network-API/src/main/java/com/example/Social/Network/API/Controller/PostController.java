@@ -3,7 +3,6 @@ package com.example.Social.Network.API.Controller;
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Service.Impl.PostServiceImpl;
-import com.example.Social.Network.API.Service.SignUpService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
