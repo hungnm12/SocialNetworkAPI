@@ -5,4 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class GetVerifyCodeReqDto {
     @JsonProperty
     private String email;
+
+
 }

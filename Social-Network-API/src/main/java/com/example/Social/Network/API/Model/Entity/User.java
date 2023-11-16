@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Table(name = "user")
 @NoArgsConstructor
@@ -48,6 +49,12 @@ public class User implements Serializable, UserDetails {
     @JsonProperty
     @Column(name= "active_account")
     private boolean active= false;
+
+    @Column(name = "coins")
+    private Integer coins;
+
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
