@@ -14,6 +14,7 @@ import com.example.Social.Network.API.Service.PostService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,8 @@ import static com.example.Social.Network.API.utils.JwtUtils.extractUserDetailsFr
 @Service
 @Slf4j
 public class PostServiceImpl implements PostService {
+@Autowired
+private JwtService jwtService;
 
 @Autowired
 private PostRepo postRepo;
@@ -52,12 +55,12 @@ private UserRepo userRepo;
 
           post1.setDescribed(described);
           post1.setStatus(status);
-
           post1.setUrl(generatePostUrl());
           User user = getUserFromToken(token);
           post1.setUser(user);
           chargeOnPost(user, post1);
           postRepo.save(post1);
+          var t = getUserFromToken(token);
 
           if (user.getCoins() < 1){
               return new GeneralResponse(null,"","");
@@ -74,16 +77,10 @@ private UserRepo userRepo;
 
 
     private User getUserFromToken(String token) {
-        // Extract the user information from the token
-        UserDetails userDetails = extractUserDetailsFromToken(token);
+       String  username = jwtService.extractUsername(token);
 
-        // Get the user's email
-        String email = userDetails.getUsername();
+        return userRepo.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Username not found" + username));
 
-        // Find the user by email
-        User user = userRepo.findByEmail(email).get();
-
-        return user;
     }
 
     private String generatePostUrl() {
