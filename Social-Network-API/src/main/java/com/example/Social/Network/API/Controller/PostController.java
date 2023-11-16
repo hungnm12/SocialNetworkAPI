@@ -26,7 +26,11 @@ public class PostController {
 
     @PostMapping("/add_post")
     public GeneralResponse addPost (
-            @RequestParam String token, @RequestParam File image,@RequestParam File video,@RequestParam String described,@RequestParam String status)
+            @RequestParam String token,
+            @RequestParam(required = false) File image,
+            @RequestParam(required = false) File video,
+            @RequestParam String described,
+            @RequestParam String status)
             throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
         try {
             return postService.addPost( token,image,video,described,status);
