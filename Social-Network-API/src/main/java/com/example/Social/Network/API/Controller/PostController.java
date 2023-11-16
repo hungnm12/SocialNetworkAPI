@@ -24,7 +24,7 @@ public class PostController {
     @Autowired
     private PostServiceImpl postService;
 
-    @PostMapping("add_post")
+    @PostMapping("/add_post")
     public GeneralResponse addPost (
             @RequestParam String token, @RequestParam File image,@RequestParam File video,@RequestParam String described,@RequestParam String status)
             throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
