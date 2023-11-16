@@ -1,6 +1,8 @@
 package com.example.Social.Network.API.Repository;
 
 import com.example.Social.Network.API.Model.Entity.Token;
+import com.example.Social.Network.API.Model.Entity.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -18,6 +20,8 @@ public interface TokenRepo extends JpaRepository<Token,Long> {
       where u.id = :id and (t.expired = false or t.revoked = false)\s
       """)
     List<Token> findAllValidTokenByUser(Long id);
-
+//    @Query(Value = " ")
+//    void updateAllByToken(String token);
+    void deleteTokenByUser(User user);
     void deleteTokenByToken(String token);
 }

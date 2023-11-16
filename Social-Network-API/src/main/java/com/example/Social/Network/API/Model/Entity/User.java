@@ -86,4 +86,8 @@ public class User implements Serializable, UserDetails {
     public boolean isEnabled() {
         return active;
     }
+
+    private void setDefaultAvatar(){
+        this.avatar = "";
+    }
 }

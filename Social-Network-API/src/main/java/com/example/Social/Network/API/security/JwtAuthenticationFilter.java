@@ -57,7 +57,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //Khi nó tìm thấy các giá trị trong SecurityContextHolder, nó giả định rằng người dùng hiện tại là người dùng được xác thực.
         if(userEmail!=null && SecurityContextHolder.getContext().getAuthentication()==null){
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            ;
             var isTokenValid = tokenRepo.findTokenByToken(jwt).map(token -> !token.isExpired() && !token.isRevoked()).orElse(false);
+            var isTokenValid2 = tokenRepo.findTokenByToken(jwt).get().isExpired();
+            var isTokenValid3 = tokenRepo.findTokenByToken(jwt).get().isRevoked();
+            System.out.println(isTokenValid2);
+            System.out.println(isTokenValid3);
 
             System.out.println(jwtService.isTokenValid(jwt,userDetails));
             System.out.println(isTokenValid);

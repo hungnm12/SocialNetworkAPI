@@ -1,6 +1,7 @@
 package com.example.Social.Network.API.Controller;
 
 import com.example.Social.Network.API.Exception.ResponseException;
+import com.example.Social.Network.API.Model.ReqDto.SignInReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Service.AccountService;
@@ -27,6 +28,17 @@ public class AccountController {
 
         try {
             return accountService.signUp( signUpReqDto);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
+    @PostMapping("/login")
+    public GeneralResponse signUp(@RequestBody SignInReqDto signInDto) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+
+        try {
+            return accountService.login(signInDto);
         }
         catch (ResponseException e) {
             return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);

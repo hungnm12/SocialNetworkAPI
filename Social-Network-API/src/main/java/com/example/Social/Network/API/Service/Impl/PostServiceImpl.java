@@ -8,7 +8,6 @@ import com.example.Social.Network.API.Model.Entity.Post;
 import com.example.Social.Network.API.Model.Entity.User;
 import com.example.Social.Network.API.Model.Entity.Video;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
-import com.example.Social.Network.API.Repository.ImageRepo;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.PostService;
@@ -23,10 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.*;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import static com.example.Social.Network.API.utils.JwtUtils.extractUserDetailsFromToken;
 
@@ -61,17 +59,16 @@ private UserRepo userRepo;
           post1.setDescribed(described);
           post1.setStatus(status);
           post1.setUrl(generatePostUrl());
-          User user = getUserFromToken(token);
+          User user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
           post1.setUser(user);
           chargeOnPost(user, post1);
           postRepo.save(post1);
-          var t = getUserFromToken(token);
 
           if (user.getCoins() < 1){
               return new GeneralResponse(null,"Not enough coins","");
           }
 
-          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "");
+          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl()));
       }
       catch (RuntimeException e ) {
           return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,"","");
@@ -80,13 +77,6 @@ private UserRepo userRepo;
     }
 
 
-
-    private User getUserFromToken(String token) {
-       String  username = jwtService.extractUsername(token);
-
-        return userRepo.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Username not found" + username));
-
-    }
 
     private String generatePostUrl() {
         // Generate a random UUID

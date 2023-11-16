@@ -6,8 +6,12 @@ import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.Entity.Token;
 import com.example.Social.Network.API.Model.Entity.TokenType;
 import com.example.Social.Network.API.Model.Entity.User;
+import com.example.Social.Network.API.Model.ReqDto.SignInReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
+import com.example.Social.Network.API.Model.ResDto.account_dto.LogInResDto;
+import com.example.Social.Network.API.Model.ResDto.account_dto.LoginResDto;
+import com.example.Social.Network.API.Model.ResDto.account_dto.SignUpResDto;
 import com.example.Social.Network.API.Repository.SignUpRepo;
 import com.example.Social.Network.API.Repository.TokenRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
@@ -22,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -84,7 +89,7 @@ public class AccountServiceImpl implements AccountService {
 //
 //                )
 //        );
-        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, token);
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,new SignUpResDto(user.getEmail(),token ) );
 
     }
 
@@ -98,7 +103,8 @@ public class AccountServiceImpl implements AccountService {
 
         if(account.isEmpty())
         {
-            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The user is not exists");
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"User is not exists");
+
 
         }
         var verifyCode = tokenRepo.findTokenByToken(verifyToken);
@@ -107,18 +113,18 @@ public class AccountServiceImpl implements AccountService {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The verifyCode is not exists");
 
         }
-//        if(account.get().isActive())
-//        {
-//            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"The user has been active");
-//
-//        }
+        if(account.get().isActive())
+        {
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"The user has been active");
+
+        }
         account.get().setActive(true);
 
-        var token = jwtService.generateToken(account.get());
+//        var token = jwtService.generateToken(account.get());
 //        revokeAllUserTokens(account.get());
-        saveUserToken(account.get(),token);
+//        saveUserToken(account.get(),token);
         tokenRepo.deleteTokenByToken(verifyToken);
-       return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,token);
+       return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,new LogInResDto(account.get().getId(),account.get().isActive()));
 
     }
 
@@ -128,12 +134,36 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public GeneralResponse login(SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+    public GeneralResponse login(SignInReqDto signInReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        if( !isValidEmail( signInReqDto.getEmail() )  )
+        {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The email is not valid");
+
+        }
+        var account = userRepo.findByEmail(signInReqDto.getEmail());
+        if(account.isEmpty())
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"User is not exists");
+
+        }
+        if(!account.get().isActive())
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"User is not validated");
+
+        }
+        if(!isValidPassword(signInReqDto.getPassword())){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The password is not valid");
+        }
+        var token = jwtService.generateToken(account.get());
+        saveUserToken(account.get(),token);
+//        revokeAllUserTokens(account.get());
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, LoginResDto.builder().id(account.get().getId()).avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp").email(account.get().getEmail()).token(token).coins(10).build());
     }
 
     @Override
     public GeneralResponse logout(String token) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+
+//        tokenRepo.deleteTokenByUser()
         return null;
     }
 
@@ -148,13 +178,14 @@ public class AccountServiceImpl implements AccountService {
 
     }
 
-//    boolean isValidPassword(SignUpReqDto signUpReqDto) {
-////        final String EMAIL_REGEX = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
-//        if (signUpReqDto.getPassword() == null || signUpReqDto.getPassword().isEmpty()){
-//            return false;
-//        }
-//        return signUpReqDto.getPassword().matches(EMAIL_REGEX);
-//    }
+    public static boolean isValidPassword(String password) {
+        // Allowed characters are letters, numbers, underscore, length between 6 and 30 characters
+        String regChar = "^[\\w_]{6,30}$";
+        // Phone number pattern
+
+        // Check if password matches the character pattern
+        return Pattern.matches(regChar, password);
+    }
 
 
     private void saveUserToken(User user, String jwtToken) {

@@ -1,4 +1,4 @@
-package com.example.Social.Network.API.Model.ResDto;
+package com.example.Social.Network.API.Model.ResDto.account_dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ public class SignUpResDto {
     private String email;
 
     @JsonProperty
-    private String password;
+    private String verifyCode;
 
 
 
