@@ -3,7 +3,6 @@ package com.example.Social.Network.API.Controller;
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Service.Impl.PostServiceImpl;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,7 @@ public class PostController {
     @Autowired
     private PostServiceImpl postService;
 
-    @PostMapping("add_post")
+    @PostMapping("/add_post")
     public GeneralResponse addPost (
             @RequestParam String token, @RequestParam File image,@RequestParam File video,@RequestParam String described,@RequestParam String status)
             throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {

@@ -18,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.ExecutionException;
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeoutException;
 
 @Service
 @Slf4j
+@Transactional
 public class AccountServiceImpl implements AccountService {
 
     @Autowired
@@ -71,18 +73,18 @@ public class AccountServiceImpl implements AccountService {
                 .email(signUpReqDto.getEmail())
                 .password(passwordEncoder.encode(signUpReqDto.getPassword()))
                 .created(LocalDateTime.now())
-                .active(true)
+//                .active(true)
                 .build();
         var token  = jwtService.generateVerifyToken(user);
         signUpRepo.save(user);
         saveUserToken(user, token);
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        signUpReqDto.getEmail(),
-                        signUpReqDto.getPassword()
-
-                )
-        );
+//        authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(
+//                        signUpReqDto.getEmail(),
+//                        signUpReqDto.getPassword()
+//
+//                )
+//        );
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, token);
 
     }
@@ -94,7 +96,7 @@ public class AccountServiceImpl implements AccountService {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The email is not valid");
         }
         var account = userRepo.findByEmail(email);
-        System.out.println(account);
+
         if(account.isEmpty())
         {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The user is not exists");
@@ -116,7 +118,7 @@ public class AccountServiceImpl implements AccountService {
         var token = jwtService.generateToken(account.get());
 //        revokeAllUserTokens(account.get());
         saveUserToken(account.get(),token);
-//        tokenRepo.deleteTokenByToken(verifyToken);
+        tokenRepo.deleteTokenByToken(verifyToken);
        return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,token);
 
     }
