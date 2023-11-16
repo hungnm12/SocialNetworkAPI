@@ -119,7 +119,7 @@ public class AccountServiceImpl implements AccountService {
 //        revokeAllUserTokens(account.get());
         saveUserToken(account.get(),token);
         tokenRepo.deleteTokenByToken(verifyToken);
-       return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,token);
+       return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,token);
 
     }
 
