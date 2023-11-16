@@ -14,8 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -32,16 +36,20 @@ private PostRepo postRepo;
 @Autowired
 private UserRepo userRepo;
     @Override
-    public GeneralResponse addPost(String token, File image, File video, String described, String status)
-            throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+    public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
+            throws ResponseException, ExecutionException, InterruptedException, TimeoutException, IOException {
 
+        log.info("[addPost]- start with input: {}", token, described, image, video,status);
+
+
+            byte[] imageBytes = image.getBytes();
 
 
         Post post1 = new Post();
         post1.setDescribed(described);
         post1.setStatus(status);
-        post1.setImage(image);
-        post1.setVideo(video);
+        post1.setImage();
+        post1.setVideo();
         post1.setUrl(generatePostUrl());
 
         User user = getUserFromToken(token);
