@@ -71,7 +71,7 @@ private UserRepo userRepo;
               return new GeneralResponse(null,"Not enough coins","");
           }
 
-          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, (post1.getId() + post1.getUrl() + user.getCoins()));
+          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "");
       }
       catch (RuntimeException e ) {
           return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,"","");
