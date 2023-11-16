@@ -20,7 +20,7 @@ public interface PostService {
     GeneralResponse getPost(String token, Long Id)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
-    GeneralResponse editPost(String token, Long Id, String described, String status, File image, String image_del, String image_sort, File video, String auto_accept)
+    GeneralResponse editPost(String token, Long Id, String described, String status, MultipartFile image, String image_del, String image_sort, MultipartFile video, String auto_accept)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse deletePost(String token, Long Id) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
@@ -30,7 +30,7 @@ public interface PostService {
 
     GeneralResponse feel(String token, Long Id, String type) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
-    GeneralResponse editPost(String token, Long Id, String described);
+
 
     GeneralResponse getMarkComment(Long Id, String index, String count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 

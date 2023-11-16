@@ -8,6 +8,7 @@ import com.example.Social.Network.API.Model.Entity.Post;
 import com.example.Social.Network.API.Model.Entity.User;
 import com.example.Social.Network.API.Model.Entity.Video;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
+import com.example.Social.Network.API.Repository.ImageRepo;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.PostService;
@@ -22,9 +23,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static com.example.Social.Network.API.utils.JwtUtils.extractUserDetailsFromToken;
 
@@ -36,6 +38,9 @@ private JwtService jwtService;
 
 @Autowired
 private PostRepo postRepo;
+
+@Autowired
+private ImageRepo imageRepo;
 
 @Autowired
 private S3Service s3Service;
@@ -63,7 +68,7 @@ private UserRepo userRepo;
           var t = getUserFromToken(token);
 
           if (user.getCoins() < 1){
-              return new GeneralResponse(null,"","");
+              return new GeneralResponse(null,"Not enough coins","");
           }
 
           return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, (post1.getId() + post1.getUrl() + user.getCoins()));
@@ -115,8 +120,62 @@ private UserRepo userRepo;
     }
 
     @Override
-    public GeneralResponse editPost(String token, Long Id, String described, String status, File image, String image_del, String image_sort, File video, String auto_accept) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+    public GeneralResponse editPost(String token, Long Id, String described, String status, MultipartFile image, String image_del, String image_sort, MultipartFile video, String auto_accept) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+
+        User user = getUserFromToken(token);
+
+        Post existPost = postRepo.findAllById(Id);
+
+        existPost.setUser(user);
+
+        chargeOnPost(user,existPost);
+
+        if (user.getCoins() < 1){
+            return new GeneralResponse(null,"Not enough coins","");
+        }
+
+        if (!image_del.isEmpty()) {
+            Image imageToDelete = imageRepo.findById(Long.parseLong(image_del)).get();
+            existPost.getImages().remove(imageToDelete);
+            imageRepo.delete(imageToDelete);
+        }
+
+        if (image != null && !image.isEmpty()) {
+            String urlImg = s3Service.uploadFile(image);
+            Image image1 = new Image();
+            image1.setUrlImage(urlImg);
+            image1.setPost(existPost);
+            existPost.getImages().add(image1);
+        }
+
+        if (!image_sort.isEmpty()) {
+            List<Long> imageIds = Arrays.stream(image_sort.split(",")).map(Long::parseLong).collect(Collectors.toList());
+            ArrayList<Image> sortedImage = (ArrayList<Image>) existPost.getImages().stream()
+                    .filter(image1 -> imageIds.contains(image1.getId()))
+                    .sorted(Comparator.comparingLong(Image::getId))
+                    .collect(Collectors.toList());
+            existPost.setImages(sortedImage);
+        }
+
+//        if (video != null && !video.isEmpty()) {
+//            String urlVideo = s3Service.uploadFile(video);
+//            Video video1 = new Video(urlVideo, existPost);
+//            existPost.setVideos(video1);
+//        }
+
+        existPost.setStatus(status);
+        existPost.setDescribed(described);
+
+        postRepo.save(existPost);
+
+
+
+        return new GeneralResponse(ResponseCode.OK_CODE, "Successfully Edited", "");
+
+
+
+
+
     }
 
     @Override
@@ -134,10 +193,6 @@ private UserRepo userRepo;
         return null;
     }
 
-    @Override
-    public GeneralResponse editPost(String token, Long Id, String described) {
-        return null;
-    }
 
     @Override
     public GeneralResponse getMarkComment(Long Id, String index, String count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {

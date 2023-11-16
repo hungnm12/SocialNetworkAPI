@@ -36,7 +36,6 @@ public class Post implements Serializable {
 
     @Column(name = "video")
     @OneToMany(mappedBy = "post")
-
     private ArrayList<Video> videos;
 
     @Column(name = "image")
