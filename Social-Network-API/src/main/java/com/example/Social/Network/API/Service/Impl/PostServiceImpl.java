@@ -41,26 +41,37 @@ private UserRepo userRepo;
     @Override
     public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        image.getOriginalFilename();
-        String url = s3Service.uploadFile(image);
-        Post post1 = new Post();
-        Image image1 = new Image();
-        image1.setUrlImage(url);
-        image1.setPost(post1);
-        Video video1 = new Video(url,post1);
+      try {
+          image.getOriginalFilename();
+          String urlImg = s3Service.uploadFile(image);
+          Post post1 = new Post();
+          Image image1 = new Image();
+          image1.setUrlImage(urlImg);
+          image1.setPost(post1);
+          Video video1 = new Video(urlImg,post1);
 
-        post1.setDescribed(described);
-        post1.setStatus(status);
+          post1.setDescribed(described);
+          post1.setStatus(status);
 
-        post1.setUrl(url);
+          post1.setUrl(generatePostUrl());
+          User user = getUserFromToken(token);
+          post1.setUser(user);
+          chargeOnPost(user, post1);
+          postRepo.save(post1);
 
-        User user = getUserFromToken(token);
-        post1.setUser(user);
-        chargeOnPost(user, post1);
-        postRepo.save(post1);
+          if (user.getCoins() < 1){
+              return new GeneralResponse(null,"","");
+          }
 
-        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, (post1.getId() + post1.getUrl() + user.getCoins()));
+          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, (post1.getId() + post1.getUrl() + user.getCoins()));
+      }
+      catch (RuntimeException e ) {
+          return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,"","");
+
+      }
     }
+
+
 
     private User getUserFromToken(String token) {
         // Extract the user information from the token
