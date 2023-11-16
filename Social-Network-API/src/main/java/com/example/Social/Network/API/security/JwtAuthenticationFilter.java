@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -56,16 +57,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //Khi nó tìm thấy các giá trị trong SecurityContextHolder, nó giả định rằng người dùng hiện tại là người dùng được xác thực.
         if(userEmail!=null && SecurityContextHolder.getContext().getAuthentication()==null){
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            var isTokenValid = tokenRepo.findTokenByToken(jwt).map(token -> !token.isExpired() && token.revoked).orElse(false);
+            var isTokenValid = tokenRepo.findTokenByToken(jwt).map(token -> !token.isExpired() && !token.isRevoked()).orElse(false);
+
+            System.out.println(jwtService.isTokenValid(jwt,userDetails));
+            System.out.println(isTokenValid);
             if(jwtService.isTokenValid(jwt,userDetails)&& isTokenValid){
+                System.out.println("1");
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
                         userDetails.getAuthorities()
                 );
-//                authenticationToken.setDetails(
-//                        new We
-//                );
+                authenticationToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }

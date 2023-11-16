@@ -1,4 +1,4 @@
-package com.example.Social.Network.API.Model;
+package com.example.Social.Network.API.Model.ReqDto;
 
 import com.example.Social.Network.API.Model.Entity.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,7 +6,7 @@ import jakarta.persistence.Column;
 import lombok.Data;
 
 @Data
-public class SignUpDto extends User {
+public class SignUpDto {
     @JsonProperty
     @Column(name = "email")
     private String email;

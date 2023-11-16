@@ -25,9 +25,22 @@ public class JwtService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshTokenExpiration;
 
+    @Value("${application.security.jwt.verify-token.expiration}")
+    private long verifyToken;
+
     public <T> T extractClaim(String token, Function<Claims,T> claimsFunction){
         final  Claims claims = extractAllClaims(token);
         return claimsFunction.apply(claims);
+    }
+    public String generateRefreshToken(
+            UserDetails userDetails
+    ) {
+        return buildToken(new HashMap<>(), userDetails, refreshTokenExpiration);
+    }
+    public String generateVerifyToken(
+            UserDetails userDetails
+    ) {
+        return buildToken(new HashMap<>(), userDetails, verifyToken);
     }
     public String generateToken(UserDetails userDetails){
         return generateToken(new HashMap<>(), userDetails);
