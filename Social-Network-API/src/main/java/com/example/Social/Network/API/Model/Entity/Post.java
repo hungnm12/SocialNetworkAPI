@@ -42,6 +42,16 @@ public class Post implements Serializable {
     @OneToMany(mappedBy = "post")
     private ArrayList<Image> images ;
 
+    @Column(name = "subject")
+    private String subject;
+
+    @Column(name = "details")
+    private String details;
+
+    @Column(name = "isReported")
+    private boolean isReported = false;
+
+    @
 
 
 }

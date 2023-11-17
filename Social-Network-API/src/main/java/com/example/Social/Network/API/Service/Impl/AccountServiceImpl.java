@@ -9,8 +9,8 @@ import com.example.Social.Network.API.Model.Entity.User;
 import com.example.Social.Network.API.Model.ReqDto.SignInReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
+
 import com.example.Social.Network.API.Model.ResDto.account_dto.LogInResDto;
-import com.example.Social.Network.API.Model.ResDto.account_dto.LoginResDto;
 import com.example.Social.Network.API.Model.ResDto.account_dto.SignUpResDto;
 import com.example.Social.Network.API.Repository.SignUpRepo;
 import com.example.Social.Network.API.Repository.TokenRepo;
@@ -157,7 +157,7 @@ public class AccountServiceImpl implements AccountService {
         var token = jwtService.generateToken(account.get());
         saveUserToken(account.get(),token);
 //        revokeAllUserTokens(account.get());
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, LoginResDto.builder().id(account.get().getId()).avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp").email(account.get().getEmail()).token(token).coins(10).build());
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, LogInResDto.builder().id(account.get().getId()).avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp").email(account.get().getEmail()).token(token).coins(10).build());
     }
 
     @Override

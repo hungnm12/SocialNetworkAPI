@@ -8,9 +8,12 @@ import com.example.Social.Network.API.Model.Entity.Post;
 import com.example.Social.Network.API.Model.Entity.User;
 import com.example.Social.Network.API.Model.Entity.Video;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
+import com.example.Social.Network.API.Model.ResDto.PostDto;
+import com.example.Social.Network.API.Repository.ImageRepo;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.PostService;
+import com.example.Social.Network.API.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,11 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
-import static com.example.Social.Network.API.utils.JwtUtils.extractUserDetailsFromToken;
+import static com.example.Social.Network.API.utils.JwtUtils.getUserFromToken;
+
 
 @Service
 @Slf4j
@@ -59,7 +64,7 @@ private UserRepo userRepo;
           post1.setDescribed(described);
           post1.setStatus(status);
           post1.setUrl(generatePostUrl());
-          User user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+          User user = getUserFromToken(jwtService,userRepo, token);
           post1.setUser(user);
           chargeOnPost(user, post1);
           postRepo.save(post1);
@@ -112,8 +117,9 @@ private UserRepo userRepo;
     @Override
     public GeneralResponse editPost(String token, Long Id, String described, String status, MultipartFile image, String image_del, String image_sort, MultipartFile video, String auto_accept) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
-        User user = getUserFromToken(token);
 
+
+        User user = getUserFromToken(jwtService,userRepo, token);
         Post existPost = postRepo.findAllById(Id);
 
         existPost.setUser(user);
@@ -170,18 +176,49 @@ private UserRepo userRepo;
 
     @Override
     public GeneralResponse deletePost(String token, Long Id) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+
+
+        User user = getUserFromToken(jwtService,userRepo, token);
+        Post existPost = postRepo.findAllById(Id);
+        existPost.setUser(user);
+
+        chargeOnPost(user,existPost);
+
+        if (user.getCoins() < 1){
+            return new GeneralResponse(null,"Not enough coins","");
+        }
+
+        postRepo.delete(existPost);
+
+        return new GeneralResponse(null,"","");
     }
 
     @Override
     public GeneralResponse reportPost(String token, Long Id, String subject, String details) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+
+        User user = getUserFromToken(jwtService,userRepo, token);
+        Post existPost = postRepo.findAllById(Id);
+        existPost.setUser(user);
+
+      existPost.setSubject(subject);
+      existPost.setDetails(details);
+      existPost.setReported(true);
+      postRepo.save(existPost);
+
+        return new GeneralResponse();
     }
+
 
     @Override
     public GeneralResponse feel(String token, Long Id, String type) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+
+        User user = getUserFromToken(jwtService,userRepo, token);
+        Post existPost = postRepo.findAllById(Id);
+        existPost.setUser(user);
+
+        return new GeneralResponse();
     }
+
 
 
     @Override
