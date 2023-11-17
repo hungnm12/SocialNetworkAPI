@@ -51,7 +51,6 @@ public class Post implements Serializable {
     @Column(name = "isReported")
     private boolean isReported = false;
 
-    @
 
 
 }

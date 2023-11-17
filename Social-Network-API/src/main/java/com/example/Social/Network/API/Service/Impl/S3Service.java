@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,8 +28,10 @@ public class S3Service implements FileServiceI {
         this.amazonS3Client.setRegion(Region.getRegion(Regions.US_EAST_1));
     }
 
+
+
     @Override
-    public String uploadFile(MultipartFile file) {
+    public Map<String,String> uploadFile(MultipartFile file) {
         var fileNameExtension = StringUtils.getFilenameExtension(file.getOriginalFilename());
         String key = UUID.randomUUID() +"."+fileNameExtension;
         var metadata = new ObjectMetadata();
@@ -43,6 +47,15 @@ public class S3Service implements FileServiceI {
         }
 
         amazonS3Client.setObjectAcl(BUCKET_NAME,key, CannedAccessControlList.PublicRead);
-        return amazonS3Client.getResourceUrl(BUCKET_NAME,key);
+        Map<String,String> res = new HashMap<>();
+        res.put( "url",amazonS3Client.getResourceUrl(BUCKET_NAME,key) );
+        res.put("key",key);
+        return res;
+    }
+
+    @Override
+    public String deleteFile() {
+//        amazonS3Client.deleteObject(BUCKET_NAME,key);
+        return null;
     }
 }

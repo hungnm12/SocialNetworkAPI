@@ -11,28 +11,28 @@ import lombok.*;
 public class LogInResDto {
     public LogInResDto(Long id, String email, String avatar, boolean active, Integer coins) {
         this.id = id;
-        this.email = email;
+        this.username = email;
         this.avatar = avatar;
         this.coins = coins;
     }
-    public LogInResDto(Long id, boolean active) {
-        this.id = id;
 
-    }
     @JsonProperty
     private Long id;
     @JsonProperty
-    private String email;
+    private String username;
 
+    @JsonProperty
+    private String token;
     @JsonProperty
     private String avatar;
 
+
+    @JsonProperty
+    private boolean active;
     @JsonProperty
     private Integer coins;
 
 
-
-    private String token;
 
 
 }

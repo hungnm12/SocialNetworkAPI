@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class JwtUtils {
 
@@ -20,5 +21,10 @@ public class JwtUtils {
         return userRepo.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Username not found" + username));
 
     }
+    public static Date getCreateAt(JwtService jwtService, UserRepo userRepo, String token) {
+
+        return jwtService.extractCreateAt(token);
+    }
+
 
 }

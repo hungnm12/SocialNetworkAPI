@@ -4,6 +4,7 @@ import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ReqDto.SignInReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -17,4 +18,7 @@ public interface AccountService {
     GeneralResponse login(SignInReqDto signInReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse logout(String token) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+    GeneralResponse changeInfoAfterSignup(String token,String username, MultipartFile avatar) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+
+
 }

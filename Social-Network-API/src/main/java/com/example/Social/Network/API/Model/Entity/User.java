@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @Table(name = "user")
@@ -18,8 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Builder
-@Getter
-@Setter
 public class User implements Serializable, UserDetails {
     @Column
     @Id
@@ -31,6 +30,9 @@ public class User implements Serializable, UserDetails {
     @Column(name = "email")
     private String email;
 
+    @JsonProperty
+    @Column(name = "user_name")
+    private String username;
     @JsonProperty
     @Column(name = "password")
     private String password;
@@ -45,7 +47,7 @@ public class User implements Serializable, UserDetails {
 
     @JsonProperty
     @Column(name = "create_date")
-    private LocalDateTime created;
+    private Date created;
 
     @JsonProperty
     @Column(name= "active_account")
@@ -56,6 +58,7 @@ public class User implements Serializable, UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<Post> posts;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -86,8 +89,11 @@ public class User implements Serializable, UserDetails {
     public boolean isEnabled() {
         return active;
     }
-
-    private void setDefaultAvatar(){
-        this.avatar = "";
+    public String getUserNameAccount(){
+        return this.username;
     }
+    public void setUserNameAccount(String username){
+     this.username = username;
+    }
+
 }

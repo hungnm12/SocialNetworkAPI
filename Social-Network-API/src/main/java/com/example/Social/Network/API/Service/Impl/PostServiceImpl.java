@@ -54,7 +54,7 @@ private UserRepo userRepo;
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
       try {
           image.getOriginalFilename();
-          String urlImg = s3Service.uploadFile(image);
+          String urlImg = s3Service.uploadFile(image).get("url");
           Post post1 = new Post();
           Image image1 = new Image();
           image1.setUrlImage(urlImg);
@@ -137,7 +137,7 @@ private UserRepo userRepo;
         }
 
         if (image != null && !image.isEmpty()) {
-            String urlImg = s3Service.uploadFile(image);
+            String urlImg = s3Service.uploadFile(image).get("url");
             Image image1 = new Image();
             image1.setUrlImage(urlImg);
             image1.setPost(existPost);
@@ -146,7 +146,9 @@ private UserRepo userRepo;
 
         if (!image_sort.isEmpty()) {
             List<Long> imageIds = Arrays.stream(image_sort.split(",")).map(Long::parseLong).collect(Collectors.toList());
-            ArrayList<Image> sortedImage = (ArrayList<Image>) existPost.getImages().stream()
+            ArrayList<Image> sortedImage = (ArrayList<Image>) existPost
+                    .getImages()
+                    .stream()
                     .filter(image1 -> imageIds.contains(image1.getId()))
                     .sorted(Comparator.comparingLong(Image::getId))
                     .collect(Collectors.toList());

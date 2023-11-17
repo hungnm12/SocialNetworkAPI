@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.net.ssl.HttpsURLConnection;
 //import java.net.http.HttpRequest;
@@ -57,5 +58,40 @@ public class AccountController {
         }
 
     }
+    @PostMapping("/logout")
+    public GeneralResponse logout(@RequestParam String token) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
 
+        try {
+
+            return accountService.logout(token);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
+    @PostMapping("/getVerifyCode")
+    public GeneralResponse getVerifyCode(@RequestParam String email) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+
+        try {
+
+            return accountService.getVerifyCode(email);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
+    @PostMapping("/changeInfoAfterSignup")
+    public GeneralResponse changeInfoAfterSignup(@RequestParam String token, @RequestParam String username, @RequestParam MultipartFile avatar) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+
+        try {
+
+            return accountService.changeInfoAfterSignup(token,username,avatar);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
 }
