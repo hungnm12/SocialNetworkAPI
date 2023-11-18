@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PostRepo extends JpaRepository<Post, Long> {
+public interface PostRepo extends JpaRepository<Post, Long>, PagingAndSortingRepository<Post,Long> {
 
 Post findAllById(long Id);
 }

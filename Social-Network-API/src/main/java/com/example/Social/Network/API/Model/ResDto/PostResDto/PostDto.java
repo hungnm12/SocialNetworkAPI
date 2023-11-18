@@ -1,4 +1,4 @@
-package com.example.Social.Network.API.Model.ResDto;
+package com.example.Social.Network.API.Model.ResDto.PostResDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

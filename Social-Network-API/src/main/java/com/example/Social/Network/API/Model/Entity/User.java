@@ -59,6 +59,12 @@ public class User implements Serializable, UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Post> posts;
 
+    @Column(name = "latitude")
+    private String latitude;
+
+    @Column(name = "longitude")
+    private String longitude;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Table(name = "post")
@@ -30,6 +31,9 @@ public class Post implements Serializable {
 
     @Column(name = "post_url")
     private String url;
+
+    @Column(name = "created")
+    private Date created;
 
     @ManyToOne
     private User user;

@@ -3,28 +3,20 @@ package com.example.Social.Network.API.Service.Impl;
 import com.example.Social.Network.API.Constant.ResponseCode;
 import com.example.Social.Network.API.Constant.ResponseMessage;
 import com.example.Social.Network.API.Exception.ResponseException;
-import com.example.Social.Network.API.Model.Entity.Image;
-import com.example.Social.Network.API.Model.Entity.Post;
-import com.example.Social.Network.API.Model.Entity.User;
-import com.example.Social.Network.API.Model.Entity.Video;
+import com.example.Social.Network.API.Model.Entity.*;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
-import com.example.Social.Network.API.Model.ResDto.PostDto;
+import com.example.Social.Network.API.Model.ResDto.PostResDto.*;
 import com.example.Social.Network.API.Repository.ImageRepo;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.PostService;
-import com.example.Social.Network.API.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -49,7 +41,9 @@ private ImageRepo imageRepo;
 private S3Service s3Service;
 @Autowired
 private UserRepo userRepo;
-    @Override
+
+// check image size and video size, fix return
+@Override
     public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
       try {
@@ -83,6 +77,7 @@ private UserRepo userRepo;
 
 
 
+
     private String generatePostUrl() {
         // Generate a random UUID
         UUID uuid = UUID.randomUUID();
@@ -108,11 +103,25 @@ private UserRepo userRepo;
         userRepo.save(user);
 
     }
-
+// Thieu case block user --> isBlock ,block do violate community standards --> banned, fix return
     @Override
-    public GeneralResponse getPost(String token, Long Id) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return new GeneralResponse();
+    public GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+
+        Post post = new Post();
+        postRepo.getById(getPostReqDto.getId());
+        User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
+        post.setUser(user);
+
+        if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
+            return new GeneralResponse(null, "Wrong or token","");
     }
+
+
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,"");
+    }
+
+
+    //fix return, missing banned case, account is locked case, chi? so am
 
     @Override
     public GeneralResponse editPost(String token, Long Id, String described, String status, MultipartFile image, String image_del, String image_sort, MultipartFile video, String auto_accept) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
@@ -126,9 +135,7 @@ private UserRepo userRepo;
 
         chargeOnPost(user,existPost);
 
-        if (user.getCoins() < 1){
-            return new GeneralResponse(null,"Not enough coins","");
-        }
+
 
         if (!image_del.isEmpty()) {
             Image imageToDelete = imageRepo.findById(Long.parseLong(image_del)).get();
@@ -161,6 +168,26 @@ private UserRepo userRepo;
 //            existPost.setVideos(video1);
 //        }
 
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(null, "Wrong or token","");
+        }
+
+        if (user.getCoins() < 1){
+            return new GeneralResponse(null,"Not enough coins","");
+        }
+
+        if (existPost.getVideos().isEmpty() || existPost.getImages().isEmpty() || (existPost.getVideos().isEmpty()&&existPost.getImages().isEmpty()) ) {
+                if (existPost.getDescribed().equals(described) || existPost.getStatus().equals(status) || (existPost.getDescribed().equals(described))&&existPost.getStatus().equals(status)) {
+                    existPost.setDescribed(described);
+                    existPost.setStatus(status);
+
+                }
+                else {
+                    return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
+                }
+
+        }
+
         existPost.setStatus(status);
         existPost.setDescribed(described);
 
@@ -168,14 +195,12 @@ private UserRepo userRepo;
 
 
 
-        return new GeneralResponse(ResponseCode.OK_CODE, "Successfully Edited", "");
-
-
-
-
+        return new GeneralResponse(ResponseCode.OK_CODE, "Successfully Edited", new  EditPostResDto());
 
     }
 
+
+    // fix return
     @Override
     public GeneralResponse deletePost(String token, Long Id) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
@@ -192,7 +217,7 @@ private UserRepo userRepo;
 
         postRepo.delete(existPost);
 
-        return new GeneralResponse(null,"","");
+        return new GeneralResponse(null,"",new DeletePostResDto());
     }
 
     @Override
@@ -233,7 +258,22 @@ private UserRepo userRepo;
         return null;
     }
 
+    @Override
+    public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto, GetListPostsResDto getListPostsResDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
+
+        Advertisement advertisement = new Advertisement();
+        User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
+        getListPostsReqDto.setId(user.getId());
+        getListPostsReqDto.setLatitude(user.getLatitude());
+        getListPostsReqDto.setLongitude(user.getLongitude());
+        getListPostsReqDto.setInCampaign(advertisement.getIn_campaign());
+
+
+
+
+        return new GeneralResponse(null,"", getListPostsResDto);
+    }
 
 
 }
