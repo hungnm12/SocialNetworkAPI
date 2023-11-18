@@ -52,7 +52,7 @@ private UserRepo userRepo;
           Post post1 = new Post();
           Image image1 = new Image();
           image1.setUrlImage(urlImg);
-          image1.setPost(post1);
+
           Video video1 = new Video(urlImg,post1);
 
           post1.setDescribed(described);
@@ -67,7 +67,7 @@ private UserRepo userRepo;
               return new GeneralResponse(null,"Not enough coins","");
           }
 
-          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl()));
+          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl(),user.getCoins()));
       }
       catch (RuntimeException e ) {
           return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,"","");
@@ -147,7 +147,7 @@ private UserRepo userRepo;
             String urlImg = s3Service.uploadFile(image).get("url");
             Image image1 = new Image();
             image1.setUrlImage(urlImg);
-            image1.setPost(existPost);
+
             existPost.getImages().add(image1);
         }
 

@@ -14,10 +14,10 @@ public class Image {
 
     @Column(name = "url_image")
     private String urlImage;
-
-    @ManyToOne()
-    @JoinColumn(name = "post_id")
-    private Post post;
+//
+//    @ManyToOne()
+//    @JoinColumn(name = "post_id")
+//    private Post post;
     public Image() {
 
     }

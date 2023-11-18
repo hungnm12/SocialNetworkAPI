@@ -43,7 +43,7 @@ public class Post implements Serializable {
     private ArrayList<Video> videos;
 
     @Column(name = "image")
-    @OneToMany(mappedBy = "post")
+    @OneToMany
     private ArrayList<Image> images ;
 
     @Column(name = "subject")

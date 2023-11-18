@@ -39,5 +39,27 @@ public class PostController {
         return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
     }
 
+
 }
+
+    @PostMapping("/edit_post")
+   public GeneralResponse editPost  (
+           @RequestParam("token") String token,
+            @RequestParam("id") Long Id,
+           @RequestParam("status") String status,
+           @RequestParam(required = false) MultipartFile image,
+           @RequestParam(required = false) MultipartFile video,
+           @RequestParam("image_del") String image_del,
+           @RequestParam("image_sort") String image_sort,
+           @RequestParam("described") String described,
+           @RequestParam("auto_accept") String auto_accept
+            ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+        try {
+            return postService.editPost(token, Id,described,status,image,image_del,image_sort,video,auto_accept);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+    }
+
     }
