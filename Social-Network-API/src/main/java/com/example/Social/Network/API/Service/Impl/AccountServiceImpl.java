@@ -18,6 +18,7 @@ import com.example.Social.Network.API.Repository.SignUpRepo;
 import com.example.Social.Network.API.Repository.TokenRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.AccountService;
+import com.example.Social.Network.API.utils.CheckUtils;
 import com.example.Social.Network.API.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +77,7 @@ public class AccountServiceImpl implements AccountService {
         else if (signUpReqDto.getEmail().isEmpty() && signUpReqDto.getPassword().isEmpty()){
             return new GeneralResponse(null,"Your email and password are not filled in yet" );
         }
-        else if (!isValidEmail(signUpReqDto.getEmail())){
+        else if (!CheckUtils.isValidEmail(signUpReqDto.getEmail())){
             return new GeneralResponse(null,"dada",signUpReqDto);
         }
 
@@ -96,7 +97,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public GeneralResponse checkVerifyCode(String email, String verifyToken) throws ResponseException {
 
-        if(!isValidEmail(email)){
+        if(!CheckUtils.isValidEmail(email)){
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The email is not valid");
         }
         var account = userRepo.findByEmail(email);
@@ -129,7 +130,7 @@ public class AccountServiceImpl implements AccountService {
 
 
     public GeneralResponse getVerifyCode(String email) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        if( !isValidEmail(email ))
+        if( !CheckUtils.isValidEmail(email ))
         {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The email is not valid");
 
@@ -157,12 +158,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public GeneralResponse login(SignInReqDto signInReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        if( !isValidEmail( signInReqDto.getEmail() )  )
+        if( !CheckUtils.isValidEmail( signInReqDto.getEmail() )  )
         {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The email is not valid");
 
         }
-        if(!isValidPassword(signInReqDto.getPassword())){
+        if(!CheckUtils.isValidPassword(signInReqDto.getPassword())){
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The password is not valid");
         }
         var account = userRepo.findByEmail(signInReqDto.getEmail());
@@ -221,7 +222,7 @@ public class AccountServiceImpl implements AccountService {
         {
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID, "The Token is invalid ");
         }
-        if(!isValidUsername(username,user.get().getEmail()))
+        if(!CheckUtils.isValidUsername(username,user.get().getEmail()))
         {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The username is not valid");
         }
@@ -239,57 +240,10 @@ public class AccountServiceImpl implements AccountService {
 
 
     //    ---------------------------------------------
-    boolean isValidEmail(String email){
-        final String EMAIL_REGEX = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
-        if (email== null || email.isEmpty()){
-            return false;
-        }
-        return email.matches(EMAIL_REGEX);
 
-    }
 
-    public static boolean isValidUsername(String username, String email) {
-        final String USERNAME_PATTERN = "^[a-zA-Z0-9]+$";
-        // Kiểm tra username không được để trống
-        if (username.isEmpty()) {
-            return false;
-        }
 
-        // Kiểm tra username không chứa ký tự đặc biệt
-        if (!Pattern.matches(USERNAME_PATTERN, username)) {
-            return false;
-        }
 
-        // Kiểm tra username không trùng với email
-        if (username.equalsIgnoreCase(email)) {
-            return false;
-        }
-
-        // Kiểm tra username không quá ngắn hoặc quá dài
-        int minLength = 3; // Độ dài tối thiểu cho username
-        int maxLength = 20; // Độ dài tối đa cho username
-        if (username.length() < minLength || username.length() > maxLength) {
-            return false;
-        }
-
-        // Kiểm tra username không là đường dẫn, email hoặc địa chỉ
-        if (username.contains("/") || username.contains("@") || username.contains(".")) {
-            return false;
-        }
-
-        return true;
-    }
-    public static boolean isValidPassword(String password) {
-        // Allowed characters are letters, numbers, underscore, length between 6 and 30 characters
-        String regChar = "^[\\w_]{6,30}$";
-        // Phone number pattern
-        if(password.length() < 8 )
-        {
-            return false;
-        }
-        // Check if password matches the character pattern
-        return Pattern.matches(regChar, password);
-    }
 
 
     private void saveUserToken(User user, String jwtToken) {
