@@ -5,12 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class GetRequestFriendResDetailDto {
 
     @JsonProperty
@@ -20,12 +22,12 @@ public class GetRequestFriendResDetailDto {
     @JsonProperty
     String avatar;
     @JsonProperty
-
-    Integer sameFriends;
+    int sameFriends;
 //    Time to receive requests
     @JsonProperty
     Date created;
 
-    public GetRequestFriendResDetailDto(Long id, String userNameAccount, String avatar, FriendRequest friendRequestByUserSendRequestAndUserGetRequest, int size) {
-    }
+
+
+
 }

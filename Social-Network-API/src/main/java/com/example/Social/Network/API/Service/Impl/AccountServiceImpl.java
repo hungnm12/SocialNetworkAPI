@@ -194,7 +194,6 @@ public class AccountServiceImpl implements AccountService {
         saveUserToken(account.get(),token);
         account.get().setCoins(10);
         account.get().setUserNameAccount(signInReqDto.getEmail().split("@")[1]);
-        System.out.println(signInReqDto.getEmail().split("@")[0]);
         userRepo.save(account.get());
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, LogInResDto.builder().id(account.get().getId()).avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp").username(account.get().getUserNameAccount()).token(token).active(account.get().isActive()).coins(account.get().getCoins()).build());
     }
@@ -262,7 +261,6 @@ public class AccountServiceImpl implements AccountService {
         if (validUserTokens.isEmpty())
             return;
 
-        System.out.println(validUserTokens);
         validUserTokens.forEach(token -> {
             token.setExpired(true);
             token.setRevoked(true);

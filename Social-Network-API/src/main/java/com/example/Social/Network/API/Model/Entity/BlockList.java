@@ -18,7 +18,6 @@ public class BlockList {
     @Column
     private Long id;
 
-    @Column
     @JoinColumn(name = "user_id")
     @ManyToOne
     private User user;

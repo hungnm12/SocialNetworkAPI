@@ -21,8 +21,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 @Service
+@Transactional
 public class FriendServiceImpl implements FriendServiceI {
 
     @Autowired
@@ -74,7 +77,7 @@ public class FriendServiceImpl implements FriendServiceI {
             return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user id is not valid");
 
         }
-        var numberOfFriends  = friendRequestRepo.countUsersGetRequestByUserSendRequest(userGetRequest);
+        var numberOfFriends  = friendRequestRepo.countUsersGetRequestByUserSendRequest(userSendRequest);
 //        Delete the request duplicate
         if(friendRequestRepo.existsFriendRequestByUserGetRequestAndUserSendRequest(userGetRequest,userSendRequest))
         {
@@ -102,23 +105,27 @@ public class FriendServiceImpl implements FriendServiceI {
         }
         var accountRequest = JwtUtils.getUserFromToken(jwtService,userRepo, token);
 
-        if(userRepo.existsUserById(accountRequest.getId()) )
+        if(!userRepo.existsUserById(userId) ||accountRequest==null )
         {
-            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not exists ");
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not exists or not valid");
 
         }
-        var userGetRequest = userRepo.findById(userId).orElseThrow() ;
+        var userGetRequest = userRepo.findById(userId).get();
 
+//        Da chap nhan hoac xoa yeu cau ket ban r
         var friendRequest = friendRequestRepo.existsFriendRequestByUserGetRequestAndUserSendRequest(userGetRequest,accountRequest);
         if(!friendRequest)
         {
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"Action has been done previously by this user");
         }
-//        Add new friend
+//        accept new friend
         if(isAccept.equals("1")){
+            System.out.println("dat");
            friendListRepo.save(FriendList.builder().userId(accountRequest).userIdFriend(userGetRequest).createdTime(new Date(System.currentTimeMillis())).build());
+
         }
-//         if reject or access success delete friend request
+        System.out.println("heloooooooooooooooooooo");
+//         when  reject or accept friend request  => delete friend request
         friendRequestRepo.deleteFriendRequestByUserGetRequestAndUserSendRequest(userGetRequest, accountRequest);
 
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "Ok" );
@@ -183,7 +190,7 @@ public class FriendServiceImpl implements FriendServiceI {
             return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not valid");
 
         }
-        Pageable pageable = (Pageable) PageRequest.of(index,count);
+        Pageable pageable =  PageRequest.of(index,count);
         List<User> blockListUser =  blockListRepo.getListBlockByUser(currentUser,pageable);
         List<GetListBlockResDto> getListBlockResDto = new ArrayList<>();
         for(User u : blockListUser){
@@ -210,19 +217,21 @@ public class FriendServiceImpl implements FriendServiceI {
             return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not exists ");
 
         }
-        Pageable paging = (Pageable) PageRequest.of(index,count);
+        Pageable paging = PageRequest.of(index,count);
         List<User> friendRequest = friendRequestRepo.findAllRequestFriendByTheUserId(user.getId(),paging);
         ArrayList<GetRequestFriendResDetailDto> getRequestFriendResDetailDtoArrayList = new ArrayList<>();
         for(User u : friendRequest)
         {
-            GetRequestFriendResDetailDto x = new GetRequestFriendResDetailDto(u.getId(),u.getUserNameAccount(),u.getAvatar(),friendRequestRepo.findFriendRequestByUserSendRequestAndUserGetRequest(user,u),friendListRepo.findSameFiends(user.getId(), u.getId()).size());
+            System.out.println(u);
+//             friendRequestRepo.findFriendRequestByUserSendRequestAndUserGetRequest(user,u),
+            GetRequestFriendResDetailDto x = new GetRequestFriendResDetailDto(u.getId(),u.getUserNameAccount(),u.getAvatar(),friendListRepo.findSameFiends(user.getId(), u.getId()).size()  ,friendRequestRepo.findFriendRequestByUserSendRequestAndUserGetRequest(user,u).getCreatedTime() );
             getRequestFriendResDetailDtoArrayList.add(x);
         }
 
         Long totalRequestFriend = friendRequestRepo.countUsersGetRequestByUserSendRequest(user);
 
         // Need to add the logic find the same friend when i have finished get the list friend
-        return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID,new GetRequestFriendRes(getRequestFriendResDetailDtoArrayList ,totalRequestFriend));
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,new GetRequestFriendRes(getRequestFriendResDetailDtoArrayList ,totalRequestFriend));
 
     }
 
@@ -248,7 +257,7 @@ public class FriendServiceImpl implements FriendServiceI {
             return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user id does not exists or not valid");
 
         }
-        Pageable paging = (Pageable) PageRequest.of(index,count);
+        Pageable paging =  PageRequest.of(index,count);
         List<User> listFriends =  friendListRepo.findUserFriendByTheUserId(userId, paging);
         ArrayList<GetRequestFriendResDetailDto> listFriendsConvert = new ArrayList<>();
         for (User listFriend : listFriends) {
