@@ -3,6 +3,7 @@ package com.example.Social.Network.API.Service.Impl;
 import com.example.Social.Network.API.Constant.ResponseCode;
 import com.example.Social.Network.API.Constant.ResponseMessage;
 import com.example.Social.Network.API.Exception.ResponseException;
+import com.example.Social.Network.API.Model.Entity.BlockList;
 import com.example.Social.Network.API.Model.Entity.FriendList;
 import com.example.Social.Network.API.Model.Entity.FriendRequest;
 import com.example.Social.Network.API.Model.Entity.User;
@@ -138,8 +139,34 @@ public class FriendServiceImpl implements FriendServiceI {
             return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not exists or not valid");
 
         }
+        if(type.equals("0"))
+        {
+//            Neu da bi block roi thi tra loi
+            var isBlock = blockListRepo.findBlockListByUserAndUserIsBlocked(user,isBlockedUser.get());
+            if(isBlock)
+            {
+                return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "The user already has been blocked");
 
-        return null;
+            }
+            var blockList =  BlockList.builder().user(user).userIsBlocked(isBlockedUser.get()).createAt(new Date(System.currentTimeMillis())).build();
+            blockListRepo.save(blockList);
+            return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "Block success" );
+
+
+        }
+//         Yeu cau unblock
+
+        var isBlock = blockListRepo.findBlockListByUserAndUserIsBlocked(user,isBlockedUser.get());
+//        Neu khong ton tai nhma lai yeu cau unblock
+        if(!isBlock)
+        {
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "The user already has been blocked");
+
+        }
+        blockListRepo.deleteBlockListByUserAndUserIsBlocked(user,isBlockedUser.get());
+
+
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "UnBlock success" );
     }
 
     @Override

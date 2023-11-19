@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Entity
 @Data
 @Builder
@@ -24,4 +26,7 @@ public class BlockList {
     @ManyToOne
     @JoinColumn(name = "user_is_blocked_id")
     private User userIsBlocked;
+
+    @Column
+    private Date createAt;
 }
