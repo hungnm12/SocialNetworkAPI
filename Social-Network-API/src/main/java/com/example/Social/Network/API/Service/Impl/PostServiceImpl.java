@@ -353,7 +353,9 @@ private UserRepo userRepo;
 
     @Override
     public GeneralResponse getMarkComment(Long Id, String index, String count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+
+
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "");
     }
 
     @Override
@@ -378,7 +380,7 @@ private UserRepo userRepo;
 
 
 
-        return new GeneralResponse(null,"");
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE);
     }
 
 
