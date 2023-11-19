@@ -75,7 +75,7 @@ public class FriendController {
             return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
         }
     }
-    @PostMapping
+    @PostMapping("/getListBlocks")
     public GeneralResponse getListBlocks(@RequestParam String token, @RequestParam Integer index, @RequestParam Integer count)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException{
         try {
             return friendService.getListBlocks(token, index, count);
