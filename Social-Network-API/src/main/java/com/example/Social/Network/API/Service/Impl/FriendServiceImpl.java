@@ -187,7 +187,7 @@ public class FriendServiceImpl implements FriendServiceI {
         }
         var currentUser = JwtUtils.getUserFromToken(jwtService,userRepo, token);
 
-        if(currentUser ==null || userRepo.existsUserById(currentUser.getId()))
+        if(currentUser ==null || !userRepo.existsUserById(currentUser.getId()))
         {
             return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not valid");
 
