@@ -56,7 +56,7 @@ public class PushSettingServiceImpl implements PushSettingServiceI {
 
         }
         PushSetting pushSetting = new PushSetting();
-        pushSetting.set
+//        pushSetting.set
 
 
         return null;
