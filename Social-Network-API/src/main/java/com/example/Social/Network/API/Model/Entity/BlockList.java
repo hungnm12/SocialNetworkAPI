@@ -16,10 +16,10 @@ import java.util.Date;
 public class BlockList {
     @Id
     @Column
+    @GeneratedValue
     private Long id;
-
-    @JoinColumn(name = "user_id")
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne

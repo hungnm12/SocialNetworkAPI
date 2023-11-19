@@ -12,6 +12,7 @@ import com.example.Social.Network.API.Model.ResDto.block_res_dto.GetListBlockRes
 import com.example.Social.Network.API.Model.ResDto.friend_res_dto.request_friend_res_dto.GetRequestFriendRes;
 import com.example.Social.Network.API.Model.ResDto.friend_res_dto.request_friend_res_dto.GetRequestFriendResDetailDto;
 import com.example.Social.Network.API.Model.ResDto.friend_res_dto.request_friend_res_dto.SetFriendRequestRes;
+import com.example.Social.Network.API.Model.ResDto.friend_res_dto.user_friend_res_dto.GetUseFriendsResDetailDto;
 import com.example.Social.Network.API.Model.ResDto.friend_res_dto.user_friend_res_dto.GetUserFriendsResDto;
 import com.example.Social.Network.API.Repository.*;
 import com.example.Social.Network.API.Service.FriendServiceI;
@@ -148,14 +149,15 @@ public class FriendServiceImpl implements FriendServiceI {
         }
         if(type.equals("0"))
         {
-//            Neu da bi block roi thi tra loi
-            var isBlock = blockListRepo.findBlockListByUserAndUserIsBlocked(user,isBlockedUser.get());
+//            Neu da bi block roi thi thong bao da bi block
+            var isBlock = blockListRepo.existsBlockListByUserAndUserIsBlocked(user,isBlockedUser.get());
             if(isBlock)
             {
                 return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "The user already has been blocked");
 
             }
             var blockList =  BlockList.builder().user(user).userIsBlocked(isBlockedUser.get()).createAt(new Date(System.currentTimeMillis())).build();
+
             blockListRepo.save(blockList);
             return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "Block success" );
 
@@ -163,7 +165,7 @@ public class FriendServiceImpl implements FriendServiceI {
         }
 //         Yeu cau unblock
 
-        var isBlock = blockListRepo.findBlockListByUserAndUserIsBlocked(user,isBlockedUser.get());
+        var isBlock = blockListRepo.existsBlockListByUserAndUserIsBlocked(user,isBlockedUser.get());
 //        Neu khong ton tai nhma lai yeu cau unblock
         if(!isBlock)
         {
@@ -259,15 +261,20 @@ public class FriendServiceImpl implements FriendServiceI {
         }
         Pageable paging =  PageRequest.of(index,count);
         List<User> listFriends =  friendListRepo.findUserFriendByTheUserId(userId, paging);
-        ArrayList<GetRequestFriendResDetailDto> listFriendsConvert = new ArrayList<>();
+        ArrayList<GetUseFriendsResDetailDto> listFriendsConvert = new ArrayList<>();
         for (User listFriend : listFriends) {
-            Date createAt = friendListRepo.findFriendListByUserIdAndUserIdFriend(currentUser, userRepo.findById(userId).get()).orElseThrow().getCreatedTime();
+            var check =  friendListRepo.findFriendListByUserIdAndUserIdFriend(currentUser, listFriend);
+            if (check.isPresent())
+            {
+                Date createAt =check.get().getCreatedTime();
+                var u = new GetUseFriendsResDetailDto(listFriend.getId(), listFriend.getUserNameAccount(), listFriend.getAvatar(), friendListRepo.findSameFiends(currentUser.getId(), userId).size(), createAt);
+                listFriendsConvert.add(u);
+            }
 
-            var u = new GetRequestFriendResDetailDto(listFriend.getId(), listFriend.getUserNameAccount(), listFriend.getAvatar(), friendListRepo.findSameFiends(currentUser.getId(), userId).size(), createAt);
-            listFriendsConvert.add(u);
+
         }
 
-        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,new GetUserFriendsResDto(listFriendsConvert, listFriends.size() ));
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,new GetUserFriendsResDto( listFriendsConvert, listFriends.size() ));
 
     }
 
