@@ -2,9 +2,10 @@ package com.example.Social.Network.API.Service;
 
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.GetListPostsResDto;
-import com.example.Social.Network.API.Model.ResDto.PostResDto.GetPostReqDto;
+import com.example.Social.Network.API.Model.ResDto.PostResDto.GetPostResDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;

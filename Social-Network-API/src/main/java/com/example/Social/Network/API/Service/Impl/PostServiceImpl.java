@@ -5,6 +5,7 @@ import com.example.Social.Network.API.Constant.ResponseMessage;
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.Entity.*;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.*;
 import com.example.Social.Network.API.Repository.ImageRepo;
@@ -42,7 +43,7 @@ private S3Service s3Service;
 @Autowired
 private UserRepo userRepo;
 
-// check image size and video size, fix return
+
 @Override
     public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
@@ -63,6 +64,15 @@ private UserRepo userRepo;
           chargeOnPost(user, post1);
           postRepo.save(post1);
 
+
+          if (isSufficientSize(image)) {
+              return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
+          }
+
+          if (isSufficientSize(video)) {
+              return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
+          }
+
           if (user.getCoins() < 1){
               return new GeneralResponse(null,"Not enough coins","");
           }
@@ -76,7 +86,15 @@ private UserRepo userRepo;
     }
 
 
+    private boolean isSufficientSize(MultipartFile file) {
+        if (file == null) {
+            return false;
+        }
+        long fileSize = file.getSize();
+        long fileSizeInMb  = fileSize / (1024 * 1024);
 
+        return fileSizeInMb > 10;
+    }
 
     private String generatePostUrl() {
         // Generate a random UUID
@@ -113,7 +131,7 @@ private UserRepo userRepo;
         post.setUser(user);
 
         if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
-            return new GeneralResponse(null, "Wrong or token","");
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
     }
 
 
