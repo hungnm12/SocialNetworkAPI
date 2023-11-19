@@ -37,6 +37,6 @@ GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, E
 
     GeneralResponse setMarkComment(String token, Long id, String content, String index, String count, String markId, String type ) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
-    GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto, GetListPostsResDto getListPostsResDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+    GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
 }

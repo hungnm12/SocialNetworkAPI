@@ -57,7 +57,7 @@ public class User implements Serializable, UserDetails {
     private Integer coins;
 
     @OneToMany(mappedBy = "user")
-    private List<Post> posts;
+    private List<Post> listing;
 
     @Column(name = "latitude")
     private String latitude;

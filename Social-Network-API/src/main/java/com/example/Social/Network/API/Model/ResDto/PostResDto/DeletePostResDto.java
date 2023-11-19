@@ -6,4 +6,7 @@ import lombok.Data;
 public class DeletePostResDto {
 
     private Integer coins;
+
+    public DeletePostResDto(Integer coins) {
+    }
 }

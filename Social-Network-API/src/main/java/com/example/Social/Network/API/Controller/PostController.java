@@ -1,15 +1,14 @@
 package com.example.Social.Network.API.Controller;
 
 import com.example.Social.Network.API.Exception.ResponseException;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Service.Impl.PostServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -61,5 +60,72 @@ public class PostController {
             return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
         }
     }
+
+        @DeleteMapping("/delete_post")
+    public GeneralResponse deletePost (
+            @RequestParam("token") String token,
+            @RequestParam("id") Long Id
+        ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+        try {
+            return  postService.deletePost(token,Id);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+    }
+
+        @PostMapping("/report_post")
+    public GeneralResponse reportPost (
+            @RequestParam("token") String token,
+            @RequestParam("id") Long Id,
+            @RequestParam("subject") String subject,
+            @RequestParam("details") String details
+        ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+            try {
+                return postService.reportPost(token,Id,subject,details);
+            }
+        catch (ResponseException e) {
+                return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+            }
+        }
+        @PostMapping("/get_post")
+    public GeneralResponse getPost(
+            GetPostReqDto getPostReqDto
+        ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+        try {
+            return postService.getPost(getPostReqDto);
+        }
+        catch (ResponseException e) {
+                return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+            }
+        }
+
+        // not functional yet
+        @PostMapping("/get_list_posts")
+    public GeneralResponse getListPosts(
+            GetListPostsReqDto getListPostsReqDto
+        ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+            try {
+                return postService.getListPosts(getListPostsReqDto);
+            }
+            catch (ResponseException e) {
+                return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+            }
+        }
+
+        @PostMapping("/feel")
+        public GeneralResponse feel(
+            @RequestParam("token") String token,
+            @RequestParam("id") Long Id,
+            @RequestParam("type") String type
+        ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+            try {
+                return postService.feel(token,Id,type);
+            }
+            catch (ResponseException e) {
+                return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "", e.getMessage(), null);
+            }
+        }
+
 
     }

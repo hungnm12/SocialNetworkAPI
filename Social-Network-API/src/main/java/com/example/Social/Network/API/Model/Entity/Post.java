@@ -35,6 +35,9 @@ public class Post implements Serializable {
     @Column(name = "created")
     private Date created;
 
+    @Column(name = "modified")
+    private Date modified;
+
     @ManyToOne
     private User user;
 
@@ -49,11 +52,29 @@ public class Post implements Serializable {
     @Column(name = "subject")
     private String subject;
 
+    @Column(name = "fake")
+    private String fake;
+
+    @Column(name = "trust")
+    private String trust;
+
+    @Column(name = "kudos")
+    private Long kudos;
+
+    @Column(name = "dissapointed")
+    private Long dissapointed;
+
     @Column(name = "details")
     private String details;
 
     @Column(name = "isReported")
     private boolean isReported = false;
+
+    @Column(name = "isRated")
+    private boolean isRated = false;
+
+    @Column(name = "isMarked")
+    private boolean isMarked = false;
 
 
 

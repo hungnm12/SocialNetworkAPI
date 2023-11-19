@@ -18,6 +18,9 @@ public class Video {
     @Column(name = "url_video")
     private String urlVideo;
 
+    @Column(name = "thumb")
+    private  String thumb;
+
     @ManyToOne()
     @JoinColumn(name = "post_id")
     private Post post;
