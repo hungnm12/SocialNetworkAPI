@@ -21,4 +21,5 @@ public interface AccountService {
     GeneralResponse changeInfoAfterSignup(String token,String username, MultipartFile avatar) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
 
+    GeneralResponse changePassword(String token, String password, String newPassword)throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 }

@@ -94,4 +94,16 @@ public class AccountController {
         }
 
     }
+    @PostMapping("/changePassword")
+    public GeneralResponse changePassword(@RequestParam String token, @RequestParam String password, @RequestParam String newPassword) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+
+        try {
+
+            return accountService.changePassword(token,password,newPassword);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
 }

@@ -206,6 +206,11 @@ public class FriendServiceImpl implements FriendServiceI {
     }
 
     @Override
+    public GeneralResponse getListSuggestedFriends(String token, Integer index, Integer count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        return null;
+    }
+
+    @Override
     public GeneralResponse getRequestedFriend(String token,Integer index , Integer count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
         if(token.isEmpty() || index ==null || count == null)
         {

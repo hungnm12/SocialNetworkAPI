@@ -85,5 +85,14 @@ public class FriendController {
         }
     }
 
+    @PostMapping("/getListSuggestedFriends")
+    public GeneralResponse getListSuggestedFriends(@RequestParam String token, @RequestParam Integer index, @RequestParam Integer count)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException{
+        try {
+            return friendService.getListSuggestedFriends(token, index, count);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+    }
 
 }

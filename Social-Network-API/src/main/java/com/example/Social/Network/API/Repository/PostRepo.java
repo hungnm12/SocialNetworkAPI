@@ -17,18 +17,11 @@ public interface PostRepo extends JpaRepository<Post, Long>, PagingAndSortingRep
 
 Post findAllById(long Id);
 
-@Query(
-
-//        "SELECT p.user_id, p.post_id, p.described " +
-//                "from User u"
-//        + "Join Post p On u.user_id = p.user_id" +
-//                "where "
-
-
+@Query(value = "select p.described from User u inner join Post p on u.id = p.user.id " +
+        "where p.described like %?2% "
 
 )
-
-    Page<SearchFunctionResDto> search(@Param("token") String token,
+    List<String> search(@Param("token") String token,
                                       @Param("keyword") String keyword,
                                       @Param("user_id") String Id,
                                       Pageable pageable

@@ -16,4 +16,6 @@ public interface FriendServiceI {
     GeneralResponse setBlock(String token, Long userId,String type) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse getListBlocks(String token, Integer index, Integer count)throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+
+    GeneralResponse getListSuggestedFriends(String token, Integer index, Integer count)throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 }

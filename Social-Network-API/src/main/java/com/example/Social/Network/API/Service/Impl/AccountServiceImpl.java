@@ -237,12 +237,62 @@ public class AccountServiceImpl implements AccountService {
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, UserResDto.builder().id(user.get().getId()).email(user.get().getEmail()).avatar(file.get("url")).created(user.get().getCreated()).username(user.get().getUserNameAccount()).build());
     }
 
+    @Override
+    public GeneralResponse changePassword(String token, String password, String newPassword) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+
+        if(password.isEmpty()|| newPassword.isEmpty())
+        {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The password is not valid");
+
+        }
+        if(!CheckUtils.isValidPassword(newPassword))
+        {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The new Password is not valid");
+
+        }
+        int n = lcs(password, newPassword);
+        if ((double) n / password.length() >= 0.8 || (double) n / newPassword.length() >= 0.8) {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The Param is not valid");
+
+
+
+        }
+        var user =JwtUtils.getUserFromToken(jwtService,userRepo,token);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "Change password success");
+    }
+
 
     //    ---------------------------------------------
 
 
 
+    public int lcs(String s1, String s2) {
+        int[][] result = new int[s2.length() + 1][s1.length() + 1];
 
+        for (int i = 0; i <= s1.length(); i++) {
+            result[0][i] = 0;
+        }
+
+        for (int i = 0; i < s2.length(); i++) {
+            result[i][0] = 0;
+            for (int j = 0; j < s1.length(); j++) {
+                result[i + 1][j + 1] = s1.charAt(j) == s2.charAt(i) ? 1 + result[i][j] : 0;
+            }
+        }
+
+        int maxLength = result[0][0];
+        for (int i = 1; i <= s2.length(); i++) {
+            for (int j = 1; j <= s1.length(); j++) {
+                if (result[i][j] > maxLength) {
+                    maxLength = result[i][j];
+                }
+            }
+        }
+
+        return maxLength;
+    }
 
 
     private void saveUserToken(User user, String jwtToken) {
