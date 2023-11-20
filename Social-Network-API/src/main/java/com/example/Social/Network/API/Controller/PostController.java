@@ -100,7 +100,7 @@ public class PostController {
             }
         }
 
-        // not functional yet
+
         @PostMapping("/get_list_posts")
     public GeneralResponse getListPosts(
             GetListPostsReqDto getListPostsReqDto

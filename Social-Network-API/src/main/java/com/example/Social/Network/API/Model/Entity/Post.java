@@ -49,6 +49,10 @@ public class Post implements Serializable {
     @OneToMany
     private ArrayList<Image> images ;
 
+    @JoinColumn(name = "advertisement")
+    @OneToOne
+    private  Advertisement advertisement;
+
     @Column(name = "subject")
     private String subject;
 
@@ -75,6 +79,9 @@ public class Post implements Serializable {
 
     @Column(name = "isMarked")
     private boolean isMarked = false;
+
+    @Column(name = "last_id")
+    private String lastId;
 
 
 

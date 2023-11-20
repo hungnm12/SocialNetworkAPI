@@ -19,4 +19,5 @@ public class Advertisement {
 
     @Column(name = "in_campaign")
     private String in_campaign;
+
 }
