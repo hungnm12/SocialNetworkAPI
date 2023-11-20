@@ -5,16 +5,27 @@ import com.example.Social.Network.API.Constant.ResponseMessage;
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.Entity.*;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetMarkCommentReqDto;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
+import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.DelSavedSearchReqDto;
+import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.GetSavedSearchReqDto;
+import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.SearchFunctionReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.*;
+import com.example.Social.Network.API.Model.ResDto.SearchResDto.SearchFunctionResDto;
 import com.example.Social.Network.API.Repository.ImageRepo;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.PostService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -28,6 +39,7 @@ import static com.example.Social.Network.API.utils.JwtUtils.getUserFromToken;
 
 @Service
 @Slf4j
+@Transactional
 public class PostServiceImpl implements PostService {
 @Autowired
 private JwtService jwtService;
@@ -352,7 +364,7 @@ private UserRepo userRepo;
 
 
     @Override
-    public GeneralResponse getMarkComment(Long Id, String index, String count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+    public GeneralResponse getMarkComment(GetMarkCommentReqDto getMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
 
     return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "");
@@ -364,23 +376,111 @@ private UserRepo userRepo;
     }
 
 
-    // not functional yet
+    // test case not covered, fix data for response
     @Override
     public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
 
         Advertisement advertisement = new Advertisement();
         User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
+        Post post = postRepo.findAllById(getListPostsReqDto.getId());
+        post.setUser(user);
+        GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
 
-//        getListPostsReqDto.setId(user.getId());
-//        getListPostsReqDto.setLatitude(user.getLatitude());
-//        getListPostsReqDto.setLongitude(user.getLongitude());
-//        getListPostsReqDto.setInCampaign(advertisement.getIn_campaign());
-
-
+        getListPostsResDto.set_blocked(user.isAccountNonLocked());
 
 
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE);
+
+
+        Sort sort= null;
+        if (!StringUtils.isEmpty(getListPostsReqDto.getSortBy()) && !StringUtils.isEmpty(getListPostsReqDto.getIndex())) {
+
+            Sort.Order ord = getListPostsReqDto.getIndex().equals("asc")
+                    ? Sort.Order.asc(getListPostsReqDto.getSortBy()) : Sort.Order.desc(getListPostsReqDto.getSortBy());
+            sort = Sort.by(ord);
+
+        } else {
+            sort = Sort.by(
+                    Sort.Order.asc("opTime")
+            );
+        }
+
+
+        int page = 0;
+        if (!StringUtils.isEmpty(getListPostsReqDto.getCount()) && getListPostsReqDto.getCount() > 0) {
+            page = getListPostsReqDto.getCount() - 1;
+        }
+
+        int size = 10;
+        if (!StringUtils.isEmpty(getListPostsReqDto.getSize())) {
+            size = getListPostsReqDto.getSize();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<GetListPostsResDto> res = postRepo.getListPosts(
+                getListPostsReqDto.getId(),
+                pageable
+        );
+
+
+
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, res);
+    }
+
+    //Test case no covered
+    @Override
+    public GeneralResponse search(SearchFunctionReqDto searchFunctionReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        log.info("[search] - Start with input: {}", searchFunctionReqDto);
+
+
+        Sort sort= null;
+        if (!StringUtils.isEmpty(searchFunctionReqDto.getSortBy()) && !StringUtils.isEmpty(searchFunctionReqDto.getIndex())) {
+
+            Sort.Order ord = searchFunctionReqDto.getIndex().equals("asc")
+                    ? Sort.Order.asc(searchFunctionReqDto.getSortBy()) : Sort.Order.desc(searchFunctionReqDto.getSortBy());
+            sort = Sort.by(ord);
+
+        } else {
+            sort = Sort.by(
+                    Sort.Order.asc("opTime")
+            );
+        }
+
+
+        int page = 0;
+        if (!StringUtils.isEmpty(searchFunctionReqDto.getCount()) && searchFunctionReqDto.getCount() > 0) {
+            page = searchFunctionReqDto.getCount() - 1;
+        }
+
+        int size = 10;
+        if (!StringUtils.isEmpty(searchFunctionReqDto.getSize())) {
+            size = searchFunctionReqDto.getSize();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+
+
+
+
+
+        Page<SearchFunctionResDto> res = postRepo.search(searchFunctionReqDto.getKeyword(),pageable);
+
+
+
+
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, res);
+    }
+
+    @Override
+    public GeneralResponse getSavedSearch(GetSavedSearchReqDto getSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        return null;
+    }
+
+    @Override
+    public GeneralResponse delSavedSearch(DelSavedSearchReqDto delSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        return null;
     }
 
 

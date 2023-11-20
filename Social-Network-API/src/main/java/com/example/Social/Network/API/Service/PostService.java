@@ -2,7 +2,11 @@ package com.example.Social.Network.API.Service;
 
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetMarkCommentReqDto;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
+import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.DelSavedSearchReqDto;
+import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.GetSavedSearchReqDto;
+import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.SearchFunctionReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.GetListPostsResDto;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.GetPostResDto;
@@ -33,10 +37,16 @@ GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, E
 
 
 
-    GeneralResponse getMarkComment(Long Id, String index, String count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+    GeneralResponse getMarkComment(GetMarkCommentReqDto getMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse setMarkComment(String token, Long id, String content, String index, String count, String markId, String type ) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
+
+    GeneralResponse search(SearchFunctionReqDto searchFunctionReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+
+    GeneralResponse getSavedSearch(GetSavedSearchReqDto getSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+
+    GeneralResponse delSavedSearch(DelSavedSearchReqDto delSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 }
