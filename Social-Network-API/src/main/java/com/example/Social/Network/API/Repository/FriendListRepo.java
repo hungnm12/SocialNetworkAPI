@@ -19,7 +19,12 @@ public interface FriendListRepo extends PagingAndSortingRepository<FriendList,Lo
     List<User> findUserFriendByTheUserId(Long userId, Pageable pageable);
 
     Optional<FriendList> findFriendListByUserIdAndUserIdFriend(User userId, User userIdFriend);
-    @Query("select fl.userIdFriend from FriendList  as fl inner  join FriendList  as fl2 " +
-            "on fl.userIdFriend.id = fl2.userIdFriend.id where fl.userId.id = ?1 and fl2.userId.id = ?2")
-    List<User> findSameFiends(Long userId, Long userIdFriend);
+    @Query( value = "select count (*) from FriendList   as fl " +
+            " inner join FriendList as fl2 on fl.userIdFriend= fl2.userIdFriend " +
+            "where fl.userId.id=?1 and fl2.userId.id=?2")
+    long findSameFiends(Long userId, Long userIdFriend);
+
+//    @Query("select fl.userIdFriend from FriendList  as fl inner  join FriendList  as fl2 " +
+//            "on fl.userIdFriend.id = fl2.userIdFriend.id where fl.userId.id = ?1 and fl2.userId.id = ?2")
+//    List<User> findSameFiends(Long userId, Long userIdFriend);
 }

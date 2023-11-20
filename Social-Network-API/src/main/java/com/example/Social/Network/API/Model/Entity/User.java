@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -59,12 +60,27 @@ public class User implements Serializable, UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Post> listing;
 
-    @Column(name = "latitude")
-    private String latitude;
+//    @Column(name = "latitude")
+//    private String latitude;
+//
+//    @Column(name = "longitude")
+//    private String longitude;
+//
+    @Column
+    private String description;
+    @Column
+    private String address;
+    @Column
+    private String city;
+    @Column
+    private String country;
+    @Column
+    private String link;
+    @Column
+    private String coverImage;
 
-    @Column(name = "longitude")
-    private String longitude;
-
+    @Column
+    private boolean isDeActive = false;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

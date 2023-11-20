@@ -54,8 +54,9 @@ public class S3Service implements FileServiceI {
     }
 
     @Override
-    public String deleteFile() {
-//        amazonS3Client.deleteObject(BUCKET_NAME,key);
-        return null;
+    public void deleteFile(String url) {
+//        https://bedan.s3.amazonaws.com/52ad05d9-beff-4917-b705-b8ba083e1437.png
+        String objectKey = url.substring(url.indexOf(BUCKET_NAME) + BUCKET_NAME.length()+1);
+        amazonS3Client.deleteObject(BUCKET_NAME,objectKey);
     }
 }

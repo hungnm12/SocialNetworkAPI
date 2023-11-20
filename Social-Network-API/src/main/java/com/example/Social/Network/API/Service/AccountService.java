@@ -4,6 +4,7 @@ import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ReqDto.SignInReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.concurrent.ExecutionException;
@@ -22,4 +23,8 @@ public interface AccountService {
 
 
     GeneralResponse changePassword(String token, String password, String newPassword)throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+
+    GeneralResponse setUserInfo(String token, String username, String description, MultipartFile avatar, String address, String city, String country, MultipartFile coverImage, String link)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
+    GeneralResponse getUserInfo(String token)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
+
 }

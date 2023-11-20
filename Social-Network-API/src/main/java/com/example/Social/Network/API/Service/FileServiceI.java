@@ -7,6 +7,6 @@ import java.util.Map;
 public interface FileServiceI {
     Map<String,String> uploadFile(MultipartFile file);
 
-    String deleteFile();
+    void deleteFile(String key);
 
 }

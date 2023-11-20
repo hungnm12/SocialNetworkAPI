@@ -231,7 +231,7 @@ public class FriendServiceImpl implements FriendServiceI {
         {
             System.out.println(u);
 //             friendRequestRepo.findFriendRequestByUserSendRequestAndUserGetRequest(user,u),
-            GetRequestFriendResDetailDto x = new GetRequestFriendResDetailDto(u.getId(),u.getUserNameAccount(),u.getAvatar(),friendListRepo.findSameFiends(user.getId(), u.getId()).size()  ,friendRequestRepo.findFriendRequestByUserSendRequestAndUserGetRequest(user,u).getCreatedTime() );
+            GetRequestFriendResDetailDto x = new GetRequestFriendResDetailDto(u.getId(),u.getUserNameAccount(),u.getAvatar(),friendListRepo.findSameFiends(user.getId(), u.getId())  ,friendRequestRepo.findFriendRequestByUserSendRequestAndUserGetRequest(user,u).getCreatedTime() );
             getRequestFriendResDetailDtoArrayList.add(x);
         }
 
@@ -268,11 +268,11 @@ public class FriendServiceImpl implements FriendServiceI {
         List<User> listFriends =  friendListRepo.findUserFriendByTheUserId(userId, paging);
         ArrayList<GetUseFriendsResDetailDto> listFriendsConvert = new ArrayList<>();
         for (User listFriend : listFriends) {
-            var check =  friendListRepo.findFriendListByUserIdAndUserIdFriend(currentUser, listFriend);
+            var check =  friendListRepo.findFriendListByUserIdAndUserIdFriend(userRepo.findById(userId).get(), listFriend);
             if (check.isPresent())
             {
                 Date createAt =check.get().getCreatedTime();
-                var u = new GetUseFriendsResDetailDto(listFriend.getId(), listFriend.getUserNameAccount(), listFriend.getAvatar(), friendListRepo.findSameFiends(currentUser.getId(), userId).size(), createAt);
+                var u = new GetUseFriendsResDetailDto(listFriend.getId(), listFriend.getUserNameAccount(), listFriend.getAvatar(), friendListRepo.findSameFiends(currentUser.getId(), listFriend.getId()), createAt);
                 listFriendsConvert.add(u);
             }
 

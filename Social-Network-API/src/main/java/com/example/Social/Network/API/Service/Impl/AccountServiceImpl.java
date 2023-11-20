@@ -20,6 +20,7 @@ import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.AccountService;
 import com.example.Social.Network.API.utils.CheckUtils;
 import com.example.Social.Network.API.utils.JwtUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,13 +30,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.naming.AuthenticationException;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -85,7 +85,10 @@ public class AccountServiceImpl implements AccountService {
                 .email(signUpReqDto.getEmail())
                 .password(passwordEncoder.encode(signUpReqDto.getPassword()))
                 .created(new Date(System.currentTimeMillis()))
+                .avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp")
+
                 .build();
+        user.setUserNameAccount("");
         var token  = jwtService.generateVerifyToken(user);
         signUpRepo.save(user);
         saveUserToken(user, token);
@@ -111,7 +114,7 @@ public class AccountServiceImpl implements AccountService {
         var verifyCode = tokenRepo.findTokenByToken(verifyToken);
         if(verifyCode.isEmpty())
         {
-            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The verifyCode is not exists");
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The verifyCode is not valid");
 
         }
         if(account.get().isActive())
@@ -195,7 +198,7 @@ public class AccountServiceImpl implements AccountService {
         account.get().setCoins(10);
         account.get().setUserNameAccount(signInReqDto.getEmail().split("@")[1]);
         userRepo.save(account.get());
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, LogInResDto.builder().id(account.get().getId()).avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp").username(account.get().getUserNameAccount()).token(token).active(account.get().isActive()).coins(account.get().getCoins()).build());
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, LogInResDto.builder().id(account.get().getId()).avatar(account.get().getAvatar()).username(account.get().getUserNameAccount()).token(token).active(account.get().isActive()).coins(account.get().getCoins()).build());
     }
 
     @Override
@@ -261,6 +264,105 @@ public class AccountServiceImpl implements AccountService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepo.save(user);
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "Change password success");
+    }
+
+    @Override
+    public GeneralResponse setUserInfo(String token, String username, String description, MultipartFile avatar, String address, String city, String country, MultipartFile coverImage, String link) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+        List<String> blockedAddress = new ArrayList<>();
+        blockedAddress.add("North Korea");
+        List<String> urlListBlock = new ArrayList<>();
+        // Adding URLs to the list
+        urlListBlock.add("https://vnhackers.com");
+
+        if(token.isEmpty())
+        {
+            return new GeneralResponse(ResponseCode.PARAMETER_NOT_ENOUGH,ResponseMessage.PARAMETER_NOT_ENOUGH,"The parameter is not enough");
+
+        }
+
+        if(!CheckUtils.isValidUsernameNoEmail(username))
+        {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The username is not valid");
+        }
+
+        if(description.length() > 150 )
+        {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The description is not valid");
+        }
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo,token);
+        if(!userRepo.existsUserById(user.getId()))
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"The User is not valid");
+
+        }
+        if(user.isDeActive())
+        {
+            return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The user is block by the system");
+        }
+        for (String a:blockedAddress
+             ) {
+            if(address.contains(a) || city.contains(a)||country.contains(a))
+            {
+                return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The country does not support , you need logout");
+
+            }
+        }
+        for(String l : urlListBlock){
+            var domainName =  CheckUtils.extractDomainName(l);
+            if(link.equals(domainName))
+            {
+                return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The Link is blocked");
+
+            }
+        }
+
+        var beforeInformation = userRepo.findById(user.getId());
+
+        if(!avatar.isEmpty())
+        {
+            if(!user.getAvatar().isEmpty())
+            {
+                s3Service.deleteFile(user.getAvatar());
+            }
+                var urlAvatar = s3Service.uploadFile(avatar).get("url");
+                user.setAvatar(urlAvatar);
+
+        }
+        else{
+            user.setAvatar("");
+        }
+        if(!coverImage.isEmpty())
+        {
+            if(!user.getCoverImage().isEmpty())
+            {
+                s3Service.deleteFile(user.getCoverImage());
+            }
+            var urlCoverImage = s3Service.uploadFile(avatar).get("url");
+            user.setCoverImage(urlCoverImage);
+
+        }
+        else {
+            user.setCoverImage("");
+        }
+
+         user.setUserNameAccount(username);
+         user.setAddress(address.isEmpty() ? address : "" );
+         user.setCity(city.isEmpty() ? city : "" );
+         user.setCountry(country.isEmpty() ? country:"" );
+         user.setLink(link.isEmpty() ?link : "" );
+         user.setDescription(description ) ;
+         if(beforeInformation.get().equals(user))
+         {
+             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE,"Action has done previously by this user");
+
+         }
+         userRepo.save(user);
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,user);
+    }
+
+    @Override
+    public GeneralResponse getUserInfo(String token) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException, ResponseException {
+        return null;
     }
 
 

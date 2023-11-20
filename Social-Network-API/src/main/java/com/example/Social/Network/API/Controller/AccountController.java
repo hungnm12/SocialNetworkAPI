@@ -106,4 +106,28 @@ public class AccountController {
         }
 
     }
+    @PostMapping("/setUserInfo")
+    public GeneralResponse setUserInfo(@RequestParam String token, @RequestParam(required = false) String username, @RequestParam(required = false) String description,@RequestParam(required = false) MultipartFile avatar , @RequestParam(required = false) String address, @RequestParam(required = false) String city, @RequestParam(required = false) String country , @RequestParam(required = false) MultipartFile coverImage,@RequestParam(required = false) String link) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+
+        try {
+
+            return accountService.setUserInfo(token,username,description,avatar,address, city,country,coverImage,link);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
+    @PostMapping("/getUserInfo")
+    public GeneralResponse getUserInfo(@RequestParam String token) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+
+        try {
+
+            return accountService.getUserInfo(token);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
 }

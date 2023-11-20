@@ -21,7 +21,7 @@ public class GetUseFriendsResDetailDto {
     String avatar;
 
     @JsonProperty
-    int sameFriends;
+    Long sameFriends;
     //    Time to receive requests
     @JsonProperty
     Date created;
