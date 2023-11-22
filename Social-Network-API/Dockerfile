@@ -1,12 +1,12 @@
-# Use the Maven image as a build stage
-FROM maven:3.8.4-openjdk-17 as build
-WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+FROM ubuntu:latest
+LABEL authors="dell"
+FROM eclipse-temurin:17-jdk-alpine
+VOLUME /tmp
+COPY target/*.jar app.jar
+EXPOSE 8080
 
-# Use the OpenJDK image as the final base image
-FROM openjdk:17.0.2-jdk-slim
-WORKDIR /app
-COPY --from=build /app/Social-Network-API/target/0.0.1-SNAPSHOT-Social-Network-API.jar Social-Network-API.jar
-EXPOSE 8000
-ENTRYPOINT ["java", "-jar", "Social-Network-API.jar"]
+ENTRYPOINT ["java","-jar","/app.jar"]
+#ENTRYPOINT ["java", "-jar","/Social-Network-API.jar"]
+#<artifactId>demo</artifactId>
+ #	<version>0.0.1-SNAPSHOT</version>
+# Social-Network-API-0.0.1-SNAPSHOT.jar
