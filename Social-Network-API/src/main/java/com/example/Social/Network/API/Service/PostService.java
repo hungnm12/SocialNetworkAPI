@@ -4,6 +4,7 @@ import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetMarkCommentReqDto;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.SetMarkCommentReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.DelSavedSearchReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.GetSavedSearchReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.SearchFunctionReqDto;
@@ -39,7 +40,7 @@ GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, E
 
     GeneralResponse getMarkComment(GetMarkCommentReqDto getMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
-    GeneralResponse setMarkComment(String token, Long id, String content, String index, String count, String markId, String type ) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+    GeneralResponse setMarkComment(SetMarkCommentReqDto setMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 

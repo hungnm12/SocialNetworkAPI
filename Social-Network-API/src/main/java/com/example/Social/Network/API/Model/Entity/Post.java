@@ -42,20 +42,19 @@ public class Post implements Serializable {
     @ManyToOne
     private User user;
 
-//    @Embedded
-//    private Author author;
 
-    @Column(name = "video")
+
+
     @OneToMany(mappedBy = "post")
-    private ArrayList<Video> videos;
+    private List<Video> videos;
 
-    @Column(name = "image")
-    @OneToMany
-    private ArrayList<Image> images ;
 
-    @JoinColumn(name = "advertisement")
-    @OneToOne
-    private  Advertisement advertisement;
+    @OneToMany(mappedBy = "post")
+    private List<Image> images ;
+
+
+//    @Embedded
+//    private  Advertisement advertisement;
 
     @Column(name = "subject")
     private String subject;

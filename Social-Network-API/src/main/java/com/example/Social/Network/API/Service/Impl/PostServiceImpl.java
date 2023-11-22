@@ -7,6 +7,7 @@ import com.example.Social.Network.API.Model.Entity.*;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetMarkCommentReqDto;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.SetMarkCommentReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.DelSavedSearchReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.GetSavedSearchReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.SearchFunctionReqDto;
@@ -152,12 +153,13 @@ private UserRepo userRepo;
         postRepo.getById(getPostReqDto.getId());
         User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
         post.setUser(user);
-//        Author author = new Author();
-//        author.setId(String.valueOf(user.getId()));
-//        author.setName(user.getUsername());
-//        author.setAvatar(user.getAvatar());
-//        author.setCoins(String.valueOf(user.getCoins()));
-//        author.setListings(user.getListing().toString());
+        Author author = new Author();
+        author.setId(String.valueOf(user.getId()));
+        author.setName(user.getUsername());
+        author.setAvatar(user.getAvatar());
+        author.setCoins(String.valueOf(user.getCoins()));
+        author.setListings(user.getListing().toString());
+
 
 
         GetPostResDto getPostResDto = new GetPostResDto();
@@ -171,8 +173,9 @@ private UserRepo userRepo;
         getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
         getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
-//        getPostResDto.setAuthor(author);
-//        getPostResDto.setImage(post.getImages().toString());
+        getPostResDto.setAuthor(author);
+//        getPostResDto.setImage((post.getImages().toString()));
+
 
 
 
@@ -344,13 +347,24 @@ private UserRepo userRepo;
     public GeneralResponse getMarkComment(GetMarkCommentReqDto getMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
 
+    // set response data
+
+        // test case wrong id
+
+        //test case ban
+
+        //test case deactive
+
     return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "");
     }
 
     @Override
-    public GeneralResponse setMarkComment(String token, Long id, String content, String index, String count, String markId, String type) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
-    }
+    public GeneralResponse setMarkComment(SetMarkCommentReqDto setMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+
+
+
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "");
+}
 
 
     // test case not covered, fix data for response
@@ -358,7 +372,7 @@ private UserRepo userRepo;
     public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
 
-        Advertisement advertisement = new Advertisement();
+//        Advertisement advertisement = new Advertisement();
         User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
         Post post = postRepo.findAllById(getListPostsReqDto.getId());
         post.setUser(user);
