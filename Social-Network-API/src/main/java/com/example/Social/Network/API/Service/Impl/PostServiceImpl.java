@@ -173,7 +173,6 @@ private UserRepo userRepo;
         getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
         getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
-        getPostResDto.setAuthor(author);
 //        getPostResDto.setImage((post.getImages().toString()));
 
 
