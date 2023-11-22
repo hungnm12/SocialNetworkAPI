@@ -13,7 +13,7 @@ public class GeneralResponse {
 
     @Setter
     @JsonProperty("code")
-    private Integer code;
+    private String code;
 
     //Gen message
 
@@ -28,12 +28,12 @@ public class GeneralResponse {
     private Object data;
 
 
-    public GeneralResponse(Integer code,  String message, Object data) {
+    public GeneralResponse(String code,  String message, Object data) {
         this.code = code;
         this.message = message;
         this.data = data;
     }
-    public GeneralResponse(Integer code, String message){
+    public GeneralResponse(String code, String message){
         this.code = code;
         this.message= message;
     }

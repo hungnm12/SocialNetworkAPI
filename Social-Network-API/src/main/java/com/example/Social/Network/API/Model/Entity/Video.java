@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 @Entity
 @AllArgsConstructor
+@Embeddable
 public class Video {
 
     @Id

@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 @Entity
 @AllArgsConstructor
+@Embeddable
 public class Image {
     @Id
     @Column(name = "image_id")

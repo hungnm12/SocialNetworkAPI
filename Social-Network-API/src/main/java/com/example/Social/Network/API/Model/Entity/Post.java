@@ -17,6 +17,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @Entity
+@Embeddable
 public class Post implements Serializable {
     @Column
     @Id
@@ -40,6 +41,9 @@ public class Post implements Serializable {
 
     @ManyToOne
     private User user;
+
+    @Embedded
+    private Author author;
 
     @Column(name = "video")
     @OneToMany(mappedBy = "post")

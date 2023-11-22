@@ -20,6 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Builder
+@Embeddable
 public class User implements Serializable, UserDetails {
     @Column
     @Id
@@ -60,12 +61,14 @@ public class User implements Serializable, UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Post> listing;
 
-//    @Column(name = "latitude")
-//    private String latitude;
-//
-//    @Column(name = "longitude")
-//    private String longitude;
-//
+    @Column(name = "latitude")
+    private String latitude;
+
+    @Column(name = "longitude")
+    private String longitude;
+
+
+
     @Column
     private String description;
     @Column
