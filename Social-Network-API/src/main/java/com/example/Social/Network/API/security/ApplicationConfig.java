@@ -1,6 +1,7 @@
 package com.example.Social.Network.API.security;
 
 import com.example.Social.Network.API.Repository.UserRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class ApplicationConfig {
+
+    @Autowired
     private final UserRepo userRepo;
 
     public ApplicationConfig( UserRepo userRepo) {

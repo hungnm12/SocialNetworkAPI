@@ -10,10 +10,8 @@ import com.example.Social.Network.API.Model.ReqDto.SignInReqDto;
 import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 
-import com.example.Social.Network.API.Model.ResDto.account_dto.CheckVerifyCodeResDto;
-import com.example.Social.Network.API.Model.ResDto.account_dto.LogInResDto;
-import com.example.Social.Network.API.Model.ResDto.account_dto.SignUpResDto;
-import com.example.Social.Network.API.Model.ResDto.account_dto.UserResDto;
+import com.example.Social.Network.API.Model.ResDto.account_dto.*;
+import com.example.Social.Network.API.Repository.FriendListRepo;
 import com.example.Social.Network.API.Repository.SignUpRepo;
 import com.example.Social.Network.API.Repository.TokenRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
@@ -56,13 +54,16 @@ public class AccountServiceImpl implements AccountService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private final FriendListRepo friendListRepo;
     private final S3Service s3Service;
-    public AccountServiceImpl(SignUpRepo signUpRepo, UserRepo userRepo, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, S3Service s3Service) {
+    public AccountServiceImpl(SignUpRepo signUpRepo, UserRepo userRepo, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, FriendListRepo friendListRepo, S3Service s3Service) {
         this.signUpRepo = signUpRepo;
         this.userRepo = userRepo;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
+        this.friendListRepo = friendListRepo;
         this.s3Service = s3Service;
     }
 
@@ -86,9 +87,10 @@ public class AccountServiceImpl implements AccountService {
                 .password(passwordEncoder.encode(signUpReqDto.getPassword()))
                 .created(new Date(System.currentTimeMillis()))
                 .avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp")
-
                 .build();
-        user.setUserNameAccount("");
+//        user.setUserNameAccount("");
+        user.setUserNameAccount(signUpReqDto.getEmail().split("@")[1]);
+
         var token  = jwtService.generateVerifyToken(user);
         signUpRepo.save(user);
         saveUserToken(user, token);
@@ -196,7 +198,6 @@ public class AccountServiceImpl implements AccountService {
         var token = jwtService.generateToken(account.get());
         saveUserToken(account.get(),token);
         account.get().setCoins(10);
-        account.get().setUserNameAccount(signInReqDto.getEmail().split("@")[1]);
         userRepo.save(account.get());
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, LogInResDto.builder().id(account.get().getId()).avatar(account.get().getAvatar()).username(account.get().getUserNameAccount()).token(token).active(account.get().isActive()).coins(account.get().getCoins()).build());
     }
@@ -280,10 +281,13 @@ public class AccountServiceImpl implements AccountService {
 
         }
 
-        if(!CheckUtils.isValidUsernameNoEmail(username))
-        {
-            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The username is not valid");
-        }
+
+            if(username!=null&&  !CheckUtils.isValidUsernameNoEmail(username))
+            {
+                return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The username is not valid");
+            }
+
+
 
         if(description.length() > 150 )
         {
@@ -295,7 +299,7 @@ public class AccountServiceImpl implements AccountService {
             return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"The User is not valid");
 
         }
-        if(user.isDeActive())
+        if(!user.isActive())
         {
             return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The user is block by the system");
         }
@@ -318,51 +322,95 @@ public class AccountServiceImpl implements AccountService {
 
         var beforeInformation = userRepo.findById(user.getId());
 
-        if(!avatar.isEmpty())
-        {
-            if(!user.getAvatar().isEmpty())
+
+            if( avatar!= null && !avatar.isEmpty())
             {
-                s3Service.deleteFile(user.getAvatar());
-            }
+                if(!user.getAvatar().isEmpty())
+                {
+                    s3Service.deleteFile(user.getAvatar());
+                }
                 var urlAvatar = s3Service.uploadFile(avatar).get("url");
                 user.setAvatar(urlAvatar);
 
-        }
-        else{
-            user.setAvatar("");
-        }
-        if(!coverImage.isEmpty())
-        {
-            if(!user.getCoverImage().isEmpty())
-            {
-                s3Service.deleteFile(user.getCoverImage());
             }
-            var urlCoverImage = s3Service.uploadFile(avatar).get("url");
-            user.setCoverImage(urlCoverImage);
+            else{
+                user.setAvatar("");
+            }
 
-        }
-        else {
-            user.setCoverImage("");
-        }
+
+            if( coverImage!=null&& !coverImage.isEmpty())
+            {
+                if(!user.getCoverImage().isEmpty())
+                {
+                    s3Service.deleteFile(user.getCoverImage());
+                }
+                var urlCoverImage = s3Service.uploadFile(coverImage).get("url");
+                user.setCoverImage(urlCoverImage);
+
+            }
+            else {
+                user.setCoverImage("");
+            }
 
          user.setUserNameAccount(username);
-         user.setAddress(address.isEmpty() ? address : "" );
-         user.setCity(city.isEmpty() ? city : "" );
-         user.setCountry(country.isEmpty() ? country:"" );
-         user.setLink(link.isEmpty() ?link : "" );
-         user.setDescription(description ) ;
-         if(beforeInformation.get().equals(user))
-         {
-             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE,"Action has done previously by this user");
-
-         }
+         user.setAddress(address.isEmpty() ? "" : address);
+         user.setCity(city.isEmpty() ? "" : city );
+         user.setCountry(country.isEmpty() ? "":country );
+         user.setLink(link.isEmpty() ?"":link );
+         user.setDescription(description.isEmpty() ? "": description ) ;
+//         if(beforeInformation.isEmpty())
+//         {
+//
+//         }
+//         if(beforeInformation.get().equals(user))
+//         {
+//             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE,"Action has done previously by this user");
+//
+//         }
          userRepo.save(user);
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,user);
     }
 
     @Override
-    public GeneralResponse getUserInfo(String token) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException, ResponseException {
-        return null;
+    public GeneralResponse getUserInfo(String token,Long userId) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException, ResponseException {
+        var user = JwtUtils.getUserFromToken(jwtService, userRepo, token);
+
+        if (userId == null) {
+            userId = user.getId();
+
+        }
+        var userInfo = userRepo.findById(userId);
+
+        if (userInfo.isEmpty()) {
+
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The User is not exists");
+
+        }
+        if(!userInfo.get().isActive()){
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The User has been blocked");
+        }
+
+        int numberFriendOfUser= friendListRepo.findUserFriendByTheUserIdNotPageable(userId ).size();
+        long isFriend = friendListRepo.isFriend(user.getId(),userId);
+
+//        var res = GetUserInfoResDto.builder()
+//                .id(userId)
+//                .username(userInfo.get().getUserNameAccount())
+//                .email(userInfo.get().getEmail())
+//                .avatar(userInfo.get().getAvatar())
+//                .coverImage(userInfo.get().getCoverImage())
+//                .link(userInfo.get().getLink())
+//                .listing(numberFriendOfUser)
+//                .is_friend(isFriend == 1)
+//                .country(userInfo.get().getCountry())
+//                .city(userInfo.get().getCity())
+//                .online(userInfo.get().isOnline())
+//                .address( userInfo.get().getAddress())
+//                .description(userInfo.get().getDescription())
+//                .coins(userInfo.get().getCoins().toString())
+//                .build();
+        userRepo.findById(userId);
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,"res");
     }
 
 

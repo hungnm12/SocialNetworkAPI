@@ -25,6 +25,6 @@ public interface AccountService {
     GeneralResponse changePassword(String token, String password, String newPassword)throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse setUserInfo(String token, String username, String description, MultipartFile avatar, String address, String city, String country, MultipartFile coverImage, String link)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
-    GeneralResponse getUserInfo(String token)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
+    GeneralResponse getUserInfo(String token,Long userId)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
 
 }

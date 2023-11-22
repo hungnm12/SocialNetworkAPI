@@ -24,7 +24,6 @@ import java.util.List;
 public class User implements Serializable, UserDetails {
     @Column
     @Id
-
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -81,9 +80,9 @@ public class User implements Serializable, UserDetails {
     private String link;
     @Column
     private String coverImage;
+//    @Column
+//    private boolean online= false;
 
-    @Column
-    private boolean isDeActive = false;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

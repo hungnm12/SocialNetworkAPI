@@ -1,6 +1,6 @@
 package com.example.Social.Network.API.Model.ResDto.PostResDto;
 
-import com.example.Social.Network.API.Model.Entity.Author;
+//import com.example.Social.Network.API.Model.Entity.Author;
 import com.example.Social.Network.API.Model.Entity.Category;
 import com.example.Social.Network.API.Model.Entity.Image;
 import com.example.Social.Network.API.Model.Entity.Video;
@@ -29,8 +29,8 @@ public class GetPostResDto {
     private Image image;
     @Embedded
     private Video video;
-    @Embedded
-    private Author author;
+//    @Embedded
+//    private Author author;
     @Embedded
     private Category category;
 

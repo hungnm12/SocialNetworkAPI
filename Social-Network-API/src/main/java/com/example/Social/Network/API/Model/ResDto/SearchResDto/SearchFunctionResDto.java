@@ -1,6 +1,6 @@
 package com.example.Social.Network.API.Model.ResDto.SearchResDto;
 
-import com.example.Social.Network.API.Model.Entity.Author;
+//import com.example.Social.Network.API.Model.Entity.Author;
 import com.example.Social.Network.API.Model.Entity.Video;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +17,6 @@ public class SearchFunctionResDto {
     private String feel;
     private String mark_comment;
     private String is_felt;
-    private Author author;
+//    private Author author;
     private String described;
 }

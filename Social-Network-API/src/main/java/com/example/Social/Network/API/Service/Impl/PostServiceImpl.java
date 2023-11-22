@@ -152,12 +152,12 @@ private UserRepo userRepo;
         postRepo.getById(getPostReqDto.getId());
         User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
         post.setUser(user);
-        Author author = new Author();
-        author.setId(String.valueOf(user.getId()));
-        author.setName(user.getUsername());
-        author.setAvatar(user.getAvatar());
-        author.setCoins(String.valueOf(user.getCoins()));
-        author.setListings(user.getListing().toString());
+//        Author author = new Author();
+//        author.setId(String.valueOf(user.getId()));
+//        author.setName(user.getUsername());
+//        author.setAvatar(user.getAvatar());
+//        author.setCoins(String.valueOf(user.getCoins()));
+//        author.setListings(user.getListing().toString());
 
 
         GetPostResDto getPostResDto = new GetPostResDto();
@@ -171,7 +171,7 @@ private UserRepo userRepo;
         getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
         getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
-        getPostResDto.setAuthor(author);
+//        getPostResDto.setAuthor(author);
 //        getPostResDto.setImage(post.getImages().toString());
 
 

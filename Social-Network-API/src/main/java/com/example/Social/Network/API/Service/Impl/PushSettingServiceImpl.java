@@ -78,7 +78,7 @@ public class PushSettingServiceImpl implements PushSettingServiceI {
 
         }
         var user = JwtUtils.getUserFromToken(jwtService,userRepo,token);
-        if(user.isDeActive())
+        if(!user.isActive())
         {
             return new GeneralResponse(ResponseCode.NOT_ACCESS, ResponseMessage.NOT_ACCESS,"The user is blocked from System");
         }
