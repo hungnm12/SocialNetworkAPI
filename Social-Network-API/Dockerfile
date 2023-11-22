@@ -5,8 +5,6 @@ COPY .. .
 RUN mvn clean package -DskipTests
 
 FROM openjdk:17.0.2-jdk-slim
-COPY --from=build /target/0.0.1-SNAPSHOT-Social-Network-API.jar Social-Network-API.jar
+COPY --from=build Social-Network-API/target/0.0.1-SNAPSHOT-Social-Network-API.jar Social-Network-API.jar
 EXPOSE 8000
 ENTRYPOINT ["java", "-jar","Social-Network-API.jar"]
-#<artifactId>demo</artifactId>
- #	<version>0.0.1-SNAPSHOT</version>
