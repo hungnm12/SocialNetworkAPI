@@ -1,5 +1,5 @@
-FROM ubuntu:latest
-LABEL authors="dell"
+#FROM ubuntu:latest
+#LABEL authors="dell"
 FROM maven:3.8.4-openjdk-17 as build
 COPY .. .
 RUN mvn clean package -DskipTests
