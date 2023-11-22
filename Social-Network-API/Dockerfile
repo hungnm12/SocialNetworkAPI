@@ -1,7 +1,7 @@
 #FROM ubuntu:latest
 #LABEL authors="dell"
 FROM eclipse-temurin:17-jdk-alpine
-VOLUME /home/user/.local/tmp
+VOLUME /home/user/.local/tmp/buildkit-mount1669618725
 #COPY /home/dell/target/Social-Network-API-0.0.1-SNAPSHOT.jar Social-Network-API.jar
 EXPOSE 8000
 COPY target/Social-Network-API-0.0.1-SNAPSHOT.jar Social-Network-API.jar
