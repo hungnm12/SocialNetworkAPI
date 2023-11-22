@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class EditPostResDto {
-    private Integer coins;
+    private String coins;
 
-    public EditPostResDto(Integer coins) {
+    public EditPostResDto(String coins) {
     }
 }

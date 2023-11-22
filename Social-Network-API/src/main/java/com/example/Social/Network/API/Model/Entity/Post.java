@@ -43,8 +43,6 @@ public class Post implements Serializable {
     private User user;
 
 
-
-
     @OneToMany(mappedBy = "post")
     private List<Video> videos;
 
