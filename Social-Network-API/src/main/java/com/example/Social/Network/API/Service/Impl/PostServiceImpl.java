@@ -77,6 +77,13 @@ private UserRepo userRepo;
           postRepo.save(post1);
 
 
+          if (image.getOriginalFilename() != null && !image.getOriginalFilename().isEmpty()) {
+              int imageCount = Math.toIntExact(imageRepo.countByPostId(post1.getId()));
+              if (imageCount >= 5) {
+                  return new GeneralResponse(ResponseCode.MAX_NUM_OF_IMG, ResponseMessage.MAX_NUM_OF_IMG, "");
+              }
+          }
+
           if (isSufficientSize(image)) {
               return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
           }
@@ -85,7 +92,7 @@ private UserRepo userRepo;
               return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
           }
 
-          if (user.getCoins() < 1){
+          if (user.getCoins() < 4){
               return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
           }
 
@@ -120,7 +127,7 @@ private UserRepo userRepo;
         String uuidString = uuid.toString();
 
         // Create a URL using the UUID string
-        String url = "https://example.com/posts/" + uuidString;
+        String url = "https://anti-fb.com/posts/" + uuidString;
 
         return url;
     }
@@ -130,7 +137,7 @@ private UserRepo userRepo;
 
         int currentCoin = user.getCoins();
 
-        currentCoin -= 1;
+        currentCoin -= 4;
 
         user.setCoins(currentCoin);
 
@@ -145,60 +152,30 @@ private UserRepo userRepo;
         postRepo.getById(getPostReqDto.getId());
         User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
         post.setUser(user);
-
+        Author author = new Author();
+        author.setId(String.valueOf(user.getId()));
+        author.setName(user.getUsername());
+        author.setAvatar(user.getAvatar());
+        author.setCoins(String.valueOf(user.getCoins()));
+        author.setListings(user.getListing().toString());
 
 
         GetPostResDto getPostResDto = new GetPostResDto();
         getPostResDto.setId(post.getId());
         getPostResDto.setUrl(post.getUrl());
-        getPostResDto.setCreated(post.getCreated());
-        getPostResDto.setModified(post.getModified());
-        getPostResDto.setDisappointed(post.getDissapointed());
-        getPostResDto.setKudos(post.getKudos());
-        getPostResDto.setFake(Long.valueOf(post.getFake()));
-        getPostResDto.setTrust(Long.valueOf(post.getTrust()));
-        getPostResDto.setIsMarked(post.isMarked());
-        getPostResDto.setIsRated(post.isRated());
+        getPostResDto.setCreated(String.valueOf(post.getCreated()));
+        getPostResDto.setModified(String.valueOf(post.getModified()));
+        getPostResDto.setDisappointed(String.valueOf(post.getDissapointed()));
+        getPostResDto.setKudos(String.valueOf(post.getKudos()));
+        getPostResDto.setFake(String.valueOf(Long.valueOf(post.getFake())));
+        getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
+        getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
+        getPostResDto.setIsRated(String.valueOf(post.isRated()));
+        getPostResDto.setAuthor(author);
+//        getPostResDto.setImage(post.getImages().toString());
 
 
-        ArrayList<Image> images = post.getImages();
-        if (images != null && !images.isEmpty()) {
-            List<GetPostResDto.Image> imageResDtos = new ArrayList<>();
-            for (Image image : images) {
-                GetPostResDto.Image imageResDto = new GetPostResDto.Image();
-                imageResDto.setId(image.getId());
-                imageResDto.setUrlImage(image.getUrlImage());
-                imageResDtos.add(imageResDto);
-            }
-            getPostResDto.setImage((GetPostResDto.Image) imageResDtos);
-        }
 
-        ArrayList<Video> videos = post.getVideos();
-        if (videos != null && !videos.isEmpty()) {
-            List<GetPostResDto.Video> videoResDtos = new ArrayList<>();
-            for (Video video : videos ) {
-                GetPostResDto.Video videoResDto = new GetPostResDto.Video();
-                videoResDto.setThumb(video.getThumb());
-                videoResDto.setUrlVideo(video.getUrlVideo());
-                videoResDtos.add(videoResDto);
-            }
-            getPostResDto.setVideo((GetPostResDto.Video) videoResDtos);
-        }
-
-//        User author = post.getUser();
-//        List<Post> posts = new ArrayList<>();
-//        for (Post userPost : author.getListing()) {
-//                userPost.getId(postRepo.getById(posts));
-//        }
-
-
-//        GetPostResDto.Author authorResDto = new GetPostResDto.Author();
-//        authorResDto.setId(author.getId());
-//
-//        authorResDto.setAvatar(author.getAvatar());
-//        authorResDto.setCoins(author.getCoins());
-//        authorResDto.setListing();
-//        getPostResDto.setAuthor(authorResDto);
 
 
 
@@ -262,7 +239,7 @@ private UserRepo userRepo;
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }
 
-        if (user.getCoins() < 1){
+        if (user.getCoins() < 4){
             return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
         }
 
@@ -309,7 +286,7 @@ private UserRepo userRepo;
 
         chargeOnPost(user,existPost);
 
-        if (user.getCoins() < 1){
+        if (user.getCoins() < 4){
             return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
         }
 
@@ -387,7 +364,7 @@ private UserRepo userRepo;
         post.setUser(user);
         GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
 
-        getListPostsResDto.set_blocked(user.isAccountNonLocked());
+//        getListPostsResDto.set_blocked(user.isAccountNonLocked());
 
 
 

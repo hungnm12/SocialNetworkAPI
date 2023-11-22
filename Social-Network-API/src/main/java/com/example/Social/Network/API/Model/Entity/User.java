@@ -20,6 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Builder
+@Embeddable
 public class User implements Serializable, UserDetails {
     @Column
     @Id
@@ -65,6 +66,8 @@ public class User implements Serializable, UserDetails {
 
     @Column(name = "longitude")
     private String longitude;
+
+
 
     @Column
     private String description;
