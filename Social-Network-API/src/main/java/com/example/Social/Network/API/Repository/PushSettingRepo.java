@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface PushSettingRepo extends JpaRepository<PushSetting,Long> {
 
     PushSetting findPushSettingByUser(User user);
+
 }

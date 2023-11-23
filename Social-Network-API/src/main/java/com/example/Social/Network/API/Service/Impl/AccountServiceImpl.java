@@ -89,7 +89,7 @@ public class AccountServiceImpl implements AccountService {
                 .avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp")
                 .build();
 //        user.setUserNameAccount("");
-        user.setUserNameAccount(signUpReqDto.getEmail().split("@")[1]);
+        user.setUserNameAccount(signUpReqDto.getEmail().split("@")[0]);
 
         var token  = jwtService.generateVerifyToken(user);
         signUpRepo.save(user);
@@ -126,8 +126,6 @@ public class AccountServiceImpl implements AccountService {
         }
         account.get().setActive(true);
         userRepo.save(account.get());
-
-
         tokenRepo.deleteTokenByToken(verifyToken);
        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,new CheckVerifyCodeResDto(account.get().getId(),account.get().isActive()));
 

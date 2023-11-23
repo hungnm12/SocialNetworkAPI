@@ -142,9 +142,15 @@ public class FriendServiceImpl implements FriendServiceI {
         }
         var user= JwtUtils.getUserFromToken(jwtService,userRepo,token);
         var isBlockedUser = userRepo.findById(userId);
-        if(user==null|| isBlockedUser.isEmpty())
+
+        if( isBlockedUser.isEmpty() )
         {
-            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not exists or not valid");
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not exists");
+
+        }
+        if( user.equals(isBlockedUser.get()))
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user id is equal the user");
 
         }
         if(type.equals("0"))

@@ -1,10 +1,36 @@
 package com.example.Social.Network.API.utils;
 
+import com.example.Social.Network.API.Model.Entity.PushSetting;
+
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class CheckUtils {
+    public static List<String> difference(PushSetting s1, PushSetting s2) throws IllegalAccessException {
+        System.out.println(s1);
+        System.out.println(s2);
+
+        List<String> changedProperties = new ArrayList<>();
+        for (Field field : s1.getClass().getDeclaredFields()) {
+            // You might want to set modifier to public first (if it is not public yet)
+            field.setAccessible(true);
+            Object value1 = field.get(s1);
+            Object value2 = field.get(s2);
+            if (value1 != null && value2 != null) {
+                System.out.println(field.getName() + "=" + value1);
+                System.out.println(field.getName() + "=" + value2);
+                if (!Objects.equals(value1, value2)) {
+                    changedProperties.add(field.getName());
+                }
+            }
+        }
+        return changedProperties;
+    }
     public static boolean isValidPassword(String password) {
         // Allowed characters are letters, numbers, underscore, length between 6 and 30 characters
         String regChar = "^[\\w_]{6,30}$";

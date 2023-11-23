@@ -55,7 +55,7 @@ public class FriendController {
         }
 
     }
-    @PostMapping("/getUserFriends")
+    @PostMapping("/get_user_friends")
     public GeneralResponse getUserFriends(@RequestParam(required = false) Long userId , @RequestParam String token, @RequestParam Integer index, @RequestParam Integer count)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
 
         try {
@@ -66,7 +66,7 @@ public class FriendController {
         }
 
     }
-    @PostMapping("/setBlock")
+    @PostMapping("/set_block")
     public GeneralResponse setBlock(@RequestParam String token , @RequestParam(required = false) Long userId, @RequestParam String type) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
         try {
             return friendService.setBlock(token, userId,type);
@@ -75,7 +75,7 @@ public class FriendController {
             return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
         }
     }
-    @PostMapping("/getListBlocks")
+    @PostMapping("/get_list_blocks")
     public GeneralResponse getListBlocks(@RequestParam String token, @RequestParam Integer index, @RequestParam Integer count)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException{
         try {
             return friendService.getListBlocks(token, index, count);
