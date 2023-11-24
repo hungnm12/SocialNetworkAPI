@@ -80,8 +80,8 @@ public class User implements Serializable, UserDetails {
     private String link;
     @Column
     private String coverImage;
-//    @Column
-//    private boolean online= false;
+    @Column(name = "online_user")
+    private String online= "0";
 
 
     @Override

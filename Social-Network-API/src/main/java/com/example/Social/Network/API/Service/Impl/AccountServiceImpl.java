@@ -20,6 +20,7 @@ import com.example.Social.Network.API.utils.CheckUtils;
 import com.example.Social.Network.API.utils.JwtUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,6 +40,8 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @Transactional
 public class AccountServiceImpl implements AccountService {
+
+    ModelMapper modelMapper = new ModelMapper();
 
     @Autowired
     private final SignUpRepo signUpRepo;
@@ -72,7 +75,7 @@ public class AccountServiceImpl implements AccountService {
 
 
         if (signUpRepo.existsByEmail(signUpReqDto.getEmail())){
-            return new GeneralResponse(ResponseCode.USER_EXISTED, ResponseMessage.USER_EXISTED, "There is an account with that email address"+ signUpReqDto.getEmail());
+            return new GeneralResponse(ResponseCode.USER_EXISTED, ResponseMessage.USER_EXISTED, "There is an account with that email address :"+ signUpReqDto.getEmail());
         }
 
         else if (signUpReqDto.getEmail().isEmpty() && signUpReqDto.getPassword().isEmpty()){
@@ -150,7 +153,7 @@ public class AccountServiceImpl implements AccountService {
 
         }
         var verifyCode  = jwtService.generateVerifyToken(account.get());
-         Date timeCreateTokenAt =  JwtUtils.getCreateAt( jwtService,userRepo,verifyCode);
+         Date timeCreateTokenAt =  JwtUtils.getCreateAt( jwtService,verifyCode);
         if(new Date(System.currentTimeMillis()).getTime() -  timeCreateTokenAt.getTime() < 120000)
         {
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"Can not execute this operation");
@@ -389,26 +392,15 @@ public class AccountServiceImpl implements AccountService {
         }
 
         int numberFriendOfUser= friendListRepo.findUserFriendByTheUserIdNotPageable(userId ).size();
+        ModelMapper x = new ModelMapper();
         long isFriend = friendListRepo.isFriend(user.getId(),userId);
-
-//        var res = GetUserInfoResDto.builder()
-//                .id(userId)
-//                .username(userInfo.get().getUserNameAccount())
-//                .email(userInfo.get().getEmail())
-//                .avatar(userInfo.get().getAvatar())
-//                .coverImage(userInfo.get().getCoverImage())
-//                .link(userInfo.get().getLink())
-//                .listing(numberFriendOfUser)
-//                .is_friend(isFriend == 1)
-//                .country(userInfo.get().getCountry())
-//                .city(userInfo.get().getCity())
-//                .online(userInfo.get().isOnline())
-//                .address( userInfo.get().getAddress())
-//                .description(userInfo.get().getDescription())
-//                .coins(userInfo.get().getCoins().toString())
-//                .build();
-        userRepo.findById(userId);
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,"res");
+//        =  modelMapper.typeMap(User.class, GetUserInfoResDto.class)
+//                .addMapping(User::getListing, GetUserInfoResDto::setListing);
+       var res   =   x.map(userInfo, GetUserInfoResDto.class);
+        System.out.println(res);
+        res.set_friend(isFriend==1);
+        res.setListing(String.valueOf(numberFriendOfUser));
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,res);
     }
 
 

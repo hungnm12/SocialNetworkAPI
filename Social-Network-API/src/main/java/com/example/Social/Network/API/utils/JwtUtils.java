@@ -21,7 +21,7 @@ public class JwtUtils {
         return userRepo.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Username not found" + username));
 
     }
-    public static Date getCreateAt(JwtService jwtService, UserRepo userRepo, String token) {
+    public static Date getCreateAt(JwtService jwtService,  String token) {
 
         return jwtService.extractCreateAt(token);
     }

@@ -27,6 +27,6 @@ public interface FriendListRepo extends PagingAndSortingRepository<FriendList,Lo
             "where fl.userId.id=?1 and fl2.userId.id=?2")
     long findSameFiends(Long userId, Long userIdFriend);
 
-    @Query(value = "select fl from FriendList fl where fl.userId = fl.userIdFriend")
+    @Query(value = "select count(fl) from FriendList fl where fl.userId.id = fl.userIdFriend.id")
     long isFriend(Long userId, Long friendId);
 }

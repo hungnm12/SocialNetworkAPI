@@ -213,7 +213,18 @@ public class FriendServiceImpl implements FriendServiceI {
 
     @Override
     public GeneralResponse getListSuggestedFriends(String token, Integer index, Integer count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+        if(!jwtService.isTokenValid(token,user) || token==null)
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
+
+        }
+        if(index ==null|| count==null){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The parameter is not valid");
+
+        }
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,   "");
+
     }
 
     @Override

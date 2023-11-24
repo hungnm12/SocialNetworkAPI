@@ -52,6 +52,7 @@
 /home/dell/Documents/project-at-school/SocialNetworkAPI/Social-Network-API/src/main/java/com/example/Social/Network/API/Repository/ImageRepo.java
 /home/dell/Documents/project-at-school/SocialNetworkAPI/Social-Network-API/src/main/java/com/example/Social/Network/API/Model/ReqDto/PostReqDto/GetMarkCommentReqDto.java
 /home/dell/Documents/project-at-school/SocialNetworkAPI/Social-Network-API/src/main/java/com/example/Social/Network/API/utils/JwtUtils.java
+/home/dell/Documents/project-at-school/SocialNetworkAPI/Social-Network-API/src/main/java/com/example/Social/Network/API/Model/ResDto/pushsetting_res_dto/PushSettingDTO.java
 /home/dell/Documents/project-at-school/SocialNetworkAPI/Social-Network-API/src/main/java/com/example/Social/Network/API/Model/ResDto/friend_res_dto/request_friend_res_dto/GetRequestFriendRes.java
 /home/dell/Documents/project-at-school/SocialNetworkAPI/Social-Network-API/src/main/java/com/example/Social/Network/API/Repository/SignUpRepo.java
 /home/dell/Documents/project-at-school/SocialNetworkAPI/Social-Network-API/src/main/java/com/example/Social/Network/API/security/ApplicationConfig.java

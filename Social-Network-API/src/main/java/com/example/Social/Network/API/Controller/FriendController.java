@@ -85,7 +85,7 @@ public class FriendController {
         }
     }
 
-    @PostMapping("/getListSuggestedFriends")
+    @PostMapping("/get_list_suggested_friends")
     public GeneralResponse getListSuggestedFriends(@RequestParam String token, @RequestParam Integer index, @RequestParam Integer count)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException{
         try {
             return friendService.getListSuggestedFriends(token, index, count);
