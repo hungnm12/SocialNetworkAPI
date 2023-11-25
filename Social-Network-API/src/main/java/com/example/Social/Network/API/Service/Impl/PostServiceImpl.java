@@ -202,12 +202,20 @@ private UserRepo userRepo;
 
 
         User user = getUserFromToken(jwtService,userRepo, token);
-        Post existPost = postRepo.findAllById(Id);
 
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
+        Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
 
-        chargeOnPost(user,existPost);
 
+        if (user.getCoins() < 4){
+            return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
+        }
+        else {
+            chargeOnPost(user,existPost);
+        }
 
 
         if (!image_del.isEmpty()) {
@@ -235,16 +243,6 @@ private UserRepo userRepo;
             existPost.setImages(sortedImage);
         }
 
-
-
-        if (!jwtService.isTokenValid(token , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-        }
-
-        if (user.getCoins() < 4){
-            return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
-        }
-
         if (existPost.getVideos().isEmpty() || existPost.getImages().isEmpty() ||
                 (existPost.getVideos().isEmpty()&&existPost.getImages().isEmpty()) ) {
                 if (existPost.getDescribed().equals(described) || existPost.getStatus().equals(status)
@@ -256,7 +254,6 @@ private UserRepo userRepo;
                 else {
                     return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
                 }
-
         }
 
         if (!user.isAccountNonExpired()) {
@@ -265,18 +262,18 @@ private UserRepo userRepo;
         if (!jwtService.isTokenValid(token , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }
-
         existPost.setStatus(status);
         existPost.setDescribed(described);
-
-        postRepo.save(existPost);
-
         List<String> words = Arrays.asList("giet","chem","dam","mau","danh nhau");
 
-if (existPost.getDescribed().contains(words.toString())){
-    return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
+        if (existPost.getDescribed().contains(words.toString())){
+            existPost.setBlocked(true);
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
 
-}
+        }
+        postRepo.save(existPost);
+
+
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new EditPostResDto(user.getCoins().toString()));
 
 
