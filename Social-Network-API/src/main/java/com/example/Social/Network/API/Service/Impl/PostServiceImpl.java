@@ -146,7 +146,7 @@ private UserRepo userRepo;
         userRepo.save(user);
 
     }
-// Thieu case block user --> isBlock ,block do violate community standards --> banned, fix return of author
+// block do violate community standards --> banned, image list, can_mark, can_rate
     @Override
     public GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
@@ -154,6 +154,8 @@ private UserRepo userRepo;
         postRepo.getById(getPostReqDto.getId());
         User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
         post.setUser(user);
+        List<Image> images = post.getImages();
+
         Author author = new Author();
         author.setId(String.valueOf(user.getId()));
         author.setName(user.getUsername());
@@ -176,8 +178,10 @@ private UserRepo userRepo;
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
 //        getPostResDto.setImage((post.getImages().toString()));
 
+        if (!user.isAccountNonLocked()) {
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
 
-
+        }
 
 
 
@@ -199,12 +203,20 @@ private UserRepo userRepo;
 
 
         User user = getUserFromToken(jwtService,userRepo, token);
-        Post existPost = postRepo.findAllById(Id);
 
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
+        Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
 
-        chargeOnPost(user,existPost);
 
+        if (user.getCoins() < 4){
+            return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
+        }
+        else {
+            chargeOnPost(user,existPost);
+        }
 
 
         if (!image_del.isEmpty()) {
@@ -232,20 +244,6 @@ private UserRepo userRepo;
             existPost.setImages(sortedImage);
         }
 
-//        if (video != null && !video.isEmpty()) {
-//            String urlVideo = s3Service.uploadFile(video);
-//            Video video1 = new Video(urlVideo, existPost);
-//            existPost.setVideos(video1);
-//        }
-
-        if (!jwtService.isTokenValid(token , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-        }
-
-        if (user.getCoins() < 4){
-            return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
-        }
-
         if (existPost.getVideos().isEmpty() || existPost.getImages().isEmpty() ||
                 (existPost.getVideos().isEmpty()&&existPost.getImages().isEmpty()) ) {
                 if (existPost.getDescribed().equals(described) || existPost.getStatus().equals(status)
@@ -257,20 +255,27 @@ private UserRepo userRepo;
                 else {
                     return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
                 }
-
         }
 
+        if (!user.isAccountNonExpired()) {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
         if (!jwtService.isTokenValid(token , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }
-
         existPost.setStatus(status);
         existPost.setDescribed(described);
+        List<String> words = Arrays.asList("giet","chem","dam","mau","danh nhau");
 
+        if (existPost.getDescribed().contains(words.toString())){
+            existPost.setBlocked(true);
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
+
+        }
         postRepo.save(existPost);
 
 
-        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new EditPostResDto(user.getCoins()));
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new EditPostResDto(user.getCoins().toString()));
 
 
     }

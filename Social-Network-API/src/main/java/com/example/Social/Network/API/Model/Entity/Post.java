@@ -43,8 +43,6 @@ public class Post implements Serializable {
     private User user;
 
 
-
-
     @OneToMany(mappedBy = "post")
     private List<Video> videos;
 
@@ -85,6 +83,9 @@ public class Post implements Serializable {
 
     @Column(name = "last_id")
     private String lastId;
+
+    @Column(name = "isBlocked")
+    private boolean blocked = false;
 
 
 
