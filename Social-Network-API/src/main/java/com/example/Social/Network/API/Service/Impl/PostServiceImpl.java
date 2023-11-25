@@ -145,7 +145,7 @@ private UserRepo userRepo;
         userRepo.save(user);
 
     }
-// Thieu case block user --> isBlock ,block do violate community standards --> banned, fix return of author
+// block do violate community standards --> banned, image list, can_mark, can_rate
     @Override
     public GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
@@ -153,6 +153,8 @@ private UserRepo userRepo;
         postRepo.getById(getPostReqDto.getId());
         User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
         post.setUser(user);
+        List<Image> images = post.getImages();
+
         Author author = new Author();
         author.setId(String.valueOf(user.getId()));
         author.setName(user.getUsername());
@@ -173,11 +175,12 @@ private UserRepo userRepo;
         getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
         getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
-        getPostResDto.setAuthor(author);
 //        getPostResDto.setImage((post.getImages().toString()));
 
+        if (!user.isAccountNonLocked()) {
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
 
-
+        }
 
 
 
@@ -232,11 +235,7 @@ private UserRepo userRepo;
             existPost.setImages(sortedImage);
         }
 
-//        if (video != null && !video.isEmpty()) {
-//            String urlVideo = s3Service.uploadFile(video);
-//            Video video1 = new Video(urlVideo, existPost);
-//            existPost.setVideos(video1);
-//        }
+
 
         if (!jwtService.isTokenValid(token , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
@@ -260,6 +259,9 @@ private UserRepo userRepo;
 
         }
 
+        if (!user.isAccountNonExpired()) {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
         if (!jwtService.isTokenValid(token , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }
@@ -269,8 +271,13 @@ private UserRepo userRepo;
 
         postRepo.save(existPost);
 
+        List<String> words = Arrays.asList("giet","chem","dam","mau","danh nhau");
 
-        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new EditPostResDto(user.getCoins()));
+if (existPost.getDescribed().contains(words.toString())){
+    return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
+
+}
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new EditPostResDto(user.getCoins().toString()));
 
 
     }

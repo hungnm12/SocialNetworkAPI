@@ -84,6 +84,9 @@ public class Post implements Serializable {
     @Column(name = "last_id")
     private String lastId;
 
+    @Column(name = "isBlocked")
+    private boolean blocked = false;
+
 
 
 }
