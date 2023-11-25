@@ -18,6 +18,7 @@ import com.example.Social.Network.API.Repository.ImageRepo;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.PostService;
+import com.example.Social.Network.API.utils.JwtUtils;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -359,10 +360,37 @@ private UserRepo userRepo;
 
     @Override
     public GeneralResponse setMarkComment(SetMarkCommentReqDto setMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+       var user =  JwtUtils.getUserFromToken(jwtService,userRepo, setMarkCommentReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"The user is not exists");
+        }
+    if(setMarkCommentReqDto.getToken()==null|| !jwtService.isTokenValid(setMarkCommentReqDto.getToken(),user ))
+    {
+        return new GeneralResponse(ResponseCode.TOKEN_INVALID,ResponseMessage.TOKEN_INVALID,"Token is not valid");
+    }
+    if(!user.isActive())
+    {
+        return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The user is blocked");
+
+    }
+    if(setMarkCommentReqDto.getComment().isEmpty() || setMarkCommentReqDto.getComment().length() > 500)
+    {
+        return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The comment is not valid");
+    }
+    if(setMarkCommentReqDto.getId()==null || setMarkCommentReqDto.getIndex() == null|| setMarkCommentReqDto.getIndex() < 0 || setMarkCommentReqDto.getCount() == null || setMarkCommentReqDto.getCount() < 1 )
+    {
+        return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The parameter is not valid");
+
+    }
+    var post = postRepo.findById(setMarkCommentReqDto.getId());
+    if(post.isEmpty())
+    {
+        return new GeneralResponse(ResponseCode.POST_NOT_EXIST,ResponseMessage.POST_NOT_EXIST,"The post is not exists");
+
+    }
 
 
-
-    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "");
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "Ok");
 }
 
 

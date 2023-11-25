@@ -73,16 +73,20 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public GeneralResponse signUp(SignUpReqDto signUpReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
+        if(!CheckUtils.isValidEmail(signUpReqDto.getEmail())){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The email is not valid");
+        }
 
         if (signUpRepo.existsByEmail(signUpReqDto.getEmail())){
             return new GeneralResponse(ResponseCode.USER_EXISTED, ResponseMessage.USER_EXISTED, "There is an account with that email address :"+ signUpReqDto.getEmail());
         }
 
         else if (signUpReqDto.getEmail().isEmpty() && signUpReqDto.getPassword().isEmpty()){
-            return new GeneralResponse(null,"Your email and password are not filled in yet" );
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"Your email and password are not filled in yet" );
         }
-        else if (!CheckUtils.isValidEmail(signUpReqDto.getEmail())){
-            return new GeneralResponse(null,"dada",signUpReqDto);
+        else if (!CheckUtils.isValidPassword(signUpReqDto.getPassword())){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The password are not valid" );
+
         }
 
         User user =  User.builder()
@@ -91,13 +95,12 @@ public class AccountServiceImpl implements AccountService {
                 .created(new Date(System.currentTimeMillis()))
                 .avatar("https://imagev3.vietnamplus.vn/w660/Uploaded/2023/bokttj/2023_01_09/avatar_the_way_of_water.jpg.webp")
                 .build();
-//        user.setUserNameAccount("");
+
         user.setUserNameAccount(signUpReqDto.getEmail().split("@")[0]);
 
         var token  = jwtService.generateVerifyToken(user);
         signUpRepo.save(user);
         saveUserToken(user, token);
-
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,new SignUpResDto(user.getEmail(),token ) );
 
     }
