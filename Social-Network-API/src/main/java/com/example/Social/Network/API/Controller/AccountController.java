@@ -25,7 +25,7 @@ public class AccountController {
     private AccountService accountService;
 
     @PostMapping("/signup")
-    public GeneralResponse signUp(@RequestParam SignUpReqDto signUpReqDto) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+    public GeneralResponse signUp(@RequestBody SignUpReqDto signUpReqDto) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
 
         try {
             return accountService.signUp( signUpReqDto);

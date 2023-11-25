@@ -12,13 +12,16 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class ApplicationConfig {
+public class ApplicationConfig implements WebMvcConfigurer   {
 
     @Autowired
     private final UserRepo userRepo;
-
+//    @Autowired
+//    private TokenInterceptor tokenInterceptor;
     public ApplicationConfig( UserRepo userRepo) {
         this.userRepo = userRepo;
     }
@@ -46,4 +49,10 @@ public class ApplicationConfig {
 //        BCryptPasswordEncoder is a concrete implementation of this the PasswordEncoder interface that use the Bcrypt algorithm for pw hashing
         return new BCryptPasswordEncoder();
     }
+
+
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(tokenInterceptor).addPathPatterns("/**");
+//    }
 }

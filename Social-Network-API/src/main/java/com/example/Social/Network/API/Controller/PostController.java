@@ -3,6 +3,7 @@ package com.example.Social.Network.API.Controller;
 import com.example.Social.Network.API.Exception.ResponseException;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetListPostsReqDto;
 import com.example.Social.Network.API.Model.ReqDto.PostReqDto.GetPostReqDto;
+import com.example.Social.Network.API.Model.ReqDto.PostReqDto.SetMarkCommentReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Service.Impl.PostServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -127,5 +128,16 @@ public class PostController {
             }
         }
 
+    @PostMapping("/set_mark_comment")
+    public GeneralResponse setMarkComment(
+            @RequestParam SetMarkCommentReqDto setMarkCommentReqDto
+            ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+        try {
+            return postService.setMarkComment(setMarkCommentReqDto);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "", e.getMessage(), null);
+        }
+    }
 
     }

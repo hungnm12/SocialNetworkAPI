@@ -4,6 +4,7 @@ import com.example.Social.Network.API.Model.Entity.Post;
 //import com.example.Social.Network.API.Model.ResDto.SearchResDto.SearchFunctionResDto;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.GetListPostsResDto;
 import com.example.Social.Network.API.Model.ResDto.SearchResDto.SearchFunctionResDto;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,12 +12,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PostRepo extends JpaRepository<Post, Long>, PagingAndSortingRepository<Post,Long> {
-
 Post findAllById(long Id);
 
     @Query("select p," +
