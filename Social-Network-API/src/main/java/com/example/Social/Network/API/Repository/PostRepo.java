@@ -29,20 +29,6 @@ Post findAllById(long Id);
 //                                      @Param("token") String token,
                                       Pageable pageable);
 
-@Query( "select p, u.id as user_id " +
-        "from User u  " +
-        "inner  join Post p on u.id = p.user.id "
 
-
-)
-    Page<GetListPostsResDto> getListPosts(
-            @Param("user_id")Long Id,
-//                            @Param("token") String token,
-//                            @Param("in_campaign") String inCampaign,
-//                            @Param("campaign_id") String campaignId,
-//                            @Param("latitude") String latitude,
-//                            @Param("longitude") String longitude,
-//                            @Param("last_id") String lastId,
-                            Pageable pageable );
 
 }

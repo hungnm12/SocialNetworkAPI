@@ -9,6 +9,7 @@ import jakarta.persistence.Embedded;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class GetPostResDto {
@@ -36,5 +37,6 @@ public class GetPostResDto {
     private Category category;
 
 
-
+    public void setImageUrls(List<String> imageUrls) {
+    }
 }

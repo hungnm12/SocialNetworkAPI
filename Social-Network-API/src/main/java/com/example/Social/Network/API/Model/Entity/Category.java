@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Category {
     @Id
-    private Long id;
+    private String id;
 
     @Column(name = "name")
     private String name;

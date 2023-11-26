@@ -14,6 +14,7 @@ import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.SearchFun
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.*;
 import com.example.Social.Network.API.Model.ResDto.SearchResDto.SearchFunctionResDto;
+import com.example.Social.Network.API.Repository.BlockListRepo;
 import com.example.Social.Network.API.Repository.ImageRepo;
 import com.example.Social.Network.API.Repository.PostRepo;
 import com.example.Social.Network.API.Repository.UserRepo;
@@ -56,6 +57,8 @@ private ImageRepo imageRepo;
 private S3Service s3Service;
 @Autowired
 private UserRepo userRepo;
+@Autowired
+private BlockListRepo blockListRepo;
 
 
 @Override
@@ -160,6 +163,7 @@ private UserRepo userRepo;
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
 
         }
+
         List<Image> images = post.getImages();
         List<ImageResDto> imageResDtos = new ArrayList<>();
         for (Image image : images) {
@@ -183,6 +187,11 @@ private UserRepo userRepo;
         author.setCoins(String.valueOf(user.getCoins()));
         author.setListings(user.getListing().toString());
 
+        Category category = new Category();
+        category.setId(category.getId());
+        category.setName(category.getName());
+        category.setHas_name(category.getHas_name());
+
         GetPostResDto getPostResDto = new GetPostResDto();
         getPostResDto.setId(post.getId());
         getPostResDto.setUrl(post.getUrl());
@@ -196,6 +205,8 @@ private UserRepo userRepo;
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
         getPostResDto.setImage((Image) imageResDtos);
         getPostResDto.setVideo((Video) videoResDtos);
+        getPostResDto.setAuthor(author);
+        getPostResDto.setCategory(category);
 
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getPostResDto);
     }
@@ -216,6 +227,9 @@ private UserRepo userRepo;
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
 
+        if (!user.isAccountNonExpired()) {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
 
         if (user.getCoins() < 4){
             return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
@@ -237,6 +251,9 @@ private UserRepo userRepo;
             image1.setUrlImage(urlImg);
 
             existPost.getImages().add(image1);
+        }
+        else {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
         }
 
         if (!image_sort.isEmpty()) {
@@ -263,9 +280,7 @@ private UserRepo userRepo;
                 }
         }
 
-        if (!user.isAccountNonExpired()) {
-            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
-        }
+
         if (!jwtService.isTokenValid(token , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }
@@ -278,8 +293,20 @@ private UserRepo userRepo;
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
 
         }
-        postRepo.save(existPost);
 
+        if (auto_accept.equals("0")){
+            postRepo.save(existPost);
+
+        }
+        else if (auto_accept.equals("1")){
+            postRepo.save(existPost);
+
+        }
+        else {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID);
+        }
+
+        postRepo.save(existPost);
 
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new EditPostResDto(user.getCoins().toString()));
 
@@ -297,16 +324,21 @@ private UserRepo userRepo;
         User user = getUserFromToken(jwtService,userRepo, token);
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
-
-        chargeOnPost(user,existPost);
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
+        if (!user.isActive()){
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED);        }
 
         if (user.getCoins() < 4){
             return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
         }
-
-        if (!jwtService.isTokenValid(token , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        else {
+            chargeOnPost(user,existPost);
         }
+
+
+
 
         postRepo.delete(existPost);
 
@@ -319,15 +351,16 @@ private UserRepo userRepo;
         User user = getUserFromToken(jwtService,userRepo, token);
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
 
       existPost.setSubject(subject);
       existPost.setDetails(details);
       existPost.setReported(true);
       postRepo.save(existPost);
 
-        if (!jwtService.isTokenValid(token , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-        }
+
 
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE);
     }
@@ -339,6 +372,9 @@ private UserRepo userRepo;
         User user = getUserFromToken(jwtService,userRepo, token);
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
 
         if (type.equals("1")) {
             existPost.setKudos(existPost.getKudos() + 1);
@@ -408,8 +444,22 @@ private UserRepo userRepo;
     // test case not covered, fix data for response
     @Override
     public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+    User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED);
+        }
+    List<Post> posts = postRepo.findAll();
 
-    return new GeneralResponse();
+    List<GetListPostsResDto> getListPostsResDtoList = new ArrayList<>();
+        for (Post post : posts) {
+            GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
+
+
+
+
+        }
+
+    return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,"");
     }
 
     //Test case no covered
