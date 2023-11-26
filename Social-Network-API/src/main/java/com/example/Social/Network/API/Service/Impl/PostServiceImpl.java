@@ -66,18 +66,6 @@ private UserRepo userRepo;
           String urlImg = s3Service.uploadFile(image).get("url");
           Post post1 = new Post();
           Image image1 = new Image();
-          image1.setUrlImage(urlImg);
-
-          Video video1 = new Video(urlImg,post1);
-
-          post1.setDescribed(described);
-          post1.setStatus(status);
-          post1.setUrl(generatePostUrl());
-          User user = getUserFromToken(jwtService,userRepo, token);
-          post1.setUser(user);
-          chargeOnPost(user, post1);
-          postRepo.save(post1);
-
 
           if (image.getOriginalFilename() != null && !image.getOriginalFilename().isEmpty()) {
               int imageCount = Math.toIntExact(imageRepo.countByPostId(post1.getId()));
@@ -93,19 +81,30 @@ private UserRepo userRepo;
           if (isSufficientSize(video)) {
               return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
           }
+          image1.setUrlImage(urlImg);
 
-          if (user.getCoins() < 4){
-              return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
-          }
+          Video video1 = new Video(urlImg,post1);
 
+          post1.setDescribed(described);
+          post1.setStatus(status);
+          post1.setUrl(generatePostUrl());
+          User user = getUserFromToken(jwtService,userRepo, token);
           if (!jwtService.isTokenValid(token , user)){
               return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
           }
+          post1.setUser(user);
+          if (user.getCoins() < 4){
+              return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
+          } else {
+              chargeOnPost(user, post1);
+          }
+
+          postRepo.save(post1);
 
           return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl(),user.getCoins()));
       }
       catch (RuntimeException e ) {
-          return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,"","");
+          return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,ResponseMessage.EXCEPTION_ERROR,"");
 
       }
     }
@@ -146,24 +145,43 @@ private UserRepo userRepo;
         userRepo.save(user);
 
     }
-// block do violate community standards --> banned, image list, can_mark, can_rate
+// block do violate community standards --> banned, can_mark, can_rate
     @Override
     public GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
         Post post = new Post();
         postRepo.getById(getPostReqDto.getId());
         User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
+        if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
         post.setUser(user);
-        List<Image> images = post.getImages();
+        if (!user.isAccountNonLocked()) {
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
 
+        }
+        List<Image> images = post.getImages();
+        List<ImageResDto> imageResDtos = new ArrayList<>();
+        for (Image image : images) {
+            ImageResDto imageResDto = new ImageResDto();
+            imageResDto.setUrl(image.getUrlImage());
+            imageResDto.setId(imageResDto.getId());
+            imageResDtos.add(imageResDto);
+        }
+        List<Video> videos = post.getVideos();
+        List<VideoResDto> videoResDtos = new ArrayList<>();
+        for (Video video : videos) {
+            VideoResDto videoResDto = new VideoResDto();
+            videoResDto.setUrl(video.getUrl());
+            videoResDto.setThumb(video.getThumb());
+            videoResDtos.add(videoResDto);
+        }
         Author author = new Author();
         author.setId(String.valueOf(user.getId()));
         author.setName(user.getUsername());
         author.setAvatar(user.getAvatar());
         author.setCoins(String.valueOf(user.getCoins()));
         author.setListings(user.getListing().toString());
-
-
 
         GetPostResDto getPostResDto = new GetPostResDto();
         getPostResDto.setId(post.getId());
@@ -176,20 +194,8 @@ private UserRepo userRepo;
         getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
         getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
-//        getPostResDto.setImage((post.getImages().toString()));
-
-        if (!user.isAccountNonLocked()) {
-            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
-
-        }
-
-
-
-
-        if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-    }
-
+        getPostResDto.setImage((Image) imageResDtos);
+        getPostResDto.setVideo((Video) videoResDtos);
 
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getPostResDto);
     }
@@ -403,52 +409,7 @@ private UserRepo userRepo;
     @Override
     public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
-
-//        Advertisement advertisement = new Advertisement();
-        User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
-        Post post = postRepo.findAllById(getListPostsReqDto.getId());
-        post.setUser(user);
-        GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
-
-//        getListPostsResDto.set_blocked(user.isAccountNonLocked());
-
-
-
-
-        Sort sort= null;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getSortBy()) && !StringUtils.isEmpty(getListPostsReqDto.getIndex())) {
-
-            Sort.Order ord = getListPostsReqDto.getIndex().equals("asc")
-                    ? Sort.Order.asc(getListPostsReqDto.getSortBy()) : Sort.Order.desc(getListPostsReqDto.getSortBy());
-            sort = Sort.by(ord);
-
-        } else {
-            sort = Sort.by(
-                    Sort.Order.asc("opTime")
-            );
-        }
-
-
-        int page = 0;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getCount()) && getListPostsReqDto.getCount() > 0) {
-            page = getListPostsReqDto.getCount() - 1;
-        }
-
-        int size = 10;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getSize())) {
-            size = getListPostsReqDto.getSize();
-        }
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<GetListPostsResDto> res = postRepo.getListPosts(
-                getListPostsReqDto.getId(),
-                pageable
-        );
-
-
-
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, res);
+    return new GeneralResponse();
     }
 
     //Test case no covered
@@ -456,44 +417,36 @@ private UserRepo userRepo;
     public GeneralResponse search(SearchFunctionReqDto searchFunctionReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
         log.info("[search] - Start with input: {}", searchFunctionReqDto);
 
-
-        Sort sort= null;
-        if (!StringUtils.isEmpty(searchFunctionReqDto.getSortBy()) && !StringUtils.isEmpty(searchFunctionReqDto.getIndex())) {
-
-            Sort.Order ord = searchFunctionReqDto.getIndex().equals("asc")
-                    ? Sort.Order.asc(searchFunctionReqDto.getSortBy()) : Sort.Order.desc(searchFunctionReqDto.getSortBy());
-            sort = Sort.by(ord);
-
-        } else {
-            sort = Sort.by(
-                    Sort.Order.asc("opTime")
-            );
+         var user = JwtUtils.getUserFromToken(jwtService,userRepo, searchFunctionReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"The user is not exists");
         }
-
-
-        int page = 0;
-        if (!StringUtils.isEmpty(searchFunctionReqDto.getCount()) && searchFunctionReqDto.getCount() > 0) {
-            page = searchFunctionReqDto.getCount() - 1;
+        if(searchFunctionReqDto.getToken()==null|| !jwtService.isTokenValid(searchFunctionReqDto.getToken(),user ))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID,ResponseMessage.TOKEN_INVALID,"Token is not valid");
         }
+        if(!user.isActive())
+        {
+            return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The user is blocked");
 
-        int size = 10;
-        if (!StringUtils.isEmpty(searchFunctionReqDto.getSize())) {
-            size = searchFunctionReqDto.getSize();
         }
+        if (!searchFunctionReqDto.getId().equals(user.getId())){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
+        }
+        if (searchFunctionReqDto.getKeyword().isEmpty()) {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
+        }
+        if(searchFunctionReqDto.getIndex() ==null|| searchFunctionReqDto.getCount()==null){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The parameter is not valid");
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        }
+        Pageable paging = PageRequest.of(searchFunctionReqDto.getIndex(),searchFunctionReqDto.getCount());
+//        List<SearchFunctionResDto> searchList =
 
 
 
 
-
-
-        Page<SearchFunctionResDto> res = postRepo.search(searchFunctionReqDto.getKeyword(),pageable);
-
-
-
-
-    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, res);
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE);
     }
 
     @Override

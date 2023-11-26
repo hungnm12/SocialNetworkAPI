@@ -8,9 +8,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SearchFunctionReqDto extends SearchReqDto {
+public class SearchFunctionReqDto  {
     private String token;
     private String keyword;
     private Long Id;
+    private Integer index;
+    private Integer count;
 
 }
