@@ -22,6 +22,7 @@ import com.example.Social.Network.API.Service.PostService;
 import com.example.Social.Network.API.utils.JwtUtils;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -158,7 +159,6 @@ private BlockListRepo blockListRepo;
         if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }
-        post.setUser(user);
         if (!user.isAccountNonLocked()) {
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
 
@@ -169,7 +169,7 @@ private BlockListRepo blockListRepo;
         for (Image image : images) {
             ImageResDto imageResDto = new ImageResDto();
             imageResDto.setUrl(image.getUrlImage());
-            imageResDto.setId(imageResDto.getId());
+            imageResDto.setId(String.valueOf(image.getId()));
             imageResDtos.add(imageResDto);
         }
         List<Video> videos = post.getVideos();
@@ -209,6 +209,70 @@ private BlockListRepo blockListRepo;
         getPostResDto.setCategory(category);
 
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getPostResDto);
+    }
+
+
+    @Override
+    public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
+        if(user == null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED);
+        }
+
+
+        Pageable paging = PageRequest.of(getListPostsReqDto.getIndex(), getListPostsReqDto.getCount());
+
+        List<Post> posts = postRepo.getListPosts(getListPostsReqDto.getId(),paging);
+
+
+
+        List<PostResDto> postResDtos = new ArrayList<>();
+        for (Post post : posts) {
+            PostResDto postResDto = new PostResDto();
+
+
+            List<Image> images = post.getImages();
+            List<ImageResDto> imageResDtos = new ArrayList<>();
+            for (Image image : images) {
+                ImageResDto imageResDto = new ImageResDto();
+                imageResDto.setUrl(image.getUrlImage());
+                imageResDtos.add(imageResDto);
+            }
+            List<Video> videos = post.getVideos();
+            List<VideoResDto> videoResDtos = new ArrayList<>();
+            for (Video video : videos) {
+                VideoResDto videoResDto = new VideoResDto();
+                videoResDto.setUrl(video.getUrl());
+                videoResDto.setThumb(video.getThumb());
+                videoResDtos.add(videoResDto);
+            }
+            Author author = new Author();
+            author.setId(String.valueOf(user.getId()));
+            author.setName(user.getUsername());
+            author.setAvatar(user.getAvatar());
+            author.setCoins(String.valueOf(user.getCoins()));
+            author.setListings(user.getListing().toString());
+
+
+            postResDto.setId(String.valueOf(post.getId()));
+            postResDto.setName("");
+            postResDto.setDescribed(post.getDescribed());
+            postResDto.setCreated(String.valueOf(post.getCreated()));
+            postResDto.setFeel("");
+            postResDto.setIs_blocked("");
+            postResDto.setCan_edit("");
+            postResDto.setBanned("");
+            postResDto.setStatus(post.getStatus());
+            postResDto.setImage((Image) imageResDtos);
+            postResDto.setAuthor(author);
+            postResDto.setVideo((Video) videoResDtos);
+
+            postResDtos.add(postResDto);
+        }
+        List<GetListPostsResDto> getListPostsResDtoList = new ArrayList<>();
+        getListPostsResDtoList.add((GetListPostsResDto) postResDtos);
+
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,"");
     }
 
 
@@ -441,26 +505,16 @@ private BlockListRepo blockListRepo;
 }
 
 
-    // test case not covered, fix data for response
-    @Override
-    public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-    User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
-        if(user== null ){
-            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED);
-        }
-    List<Post> posts = postRepo.findAll();
 
-    List<GetListPostsResDto> getListPostsResDtoList = new ArrayList<>();
-        for (Post post : posts) {
-            GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
+
+    private GetListPostsResDto toGetPostResDto(Post post) {
+    GetListPostsResDto resDto = new GetListPostsResDto();
 
 
 
-
-        }
-
-    return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,"");
+    return  resDto;
     }
+
 
     //Test case no covered
     @Override
@@ -491,12 +545,12 @@ private BlockListRepo blockListRepo;
 
         }
         Pageable paging = PageRequest.of(searchFunctionReqDto.getIndex(),searchFunctionReqDto.getCount());
-//        List<SearchFunctionResDto> searchList =
+        List<Post> posts = postRepo.search(searchFunctionReqDto.getKeyword(),paging);
 
 
 
 
-    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE);
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,posts);
     }
 
     @Override
