@@ -13,11 +13,9 @@ import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.GetSavedS
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.SearchFunctionReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.*;
+import com.example.Social.Network.API.Model.ResDto.SearchResDto.GetSavedSearchResDto;
 import com.example.Social.Network.API.Model.ResDto.SearchResDto.SearchFunctionResDto;
-import com.example.Social.Network.API.Repository.BlockListRepo;
-import com.example.Social.Network.API.Repository.ImageRepo;
-import com.example.Social.Network.API.Repository.PostRepo;
-import com.example.Social.Network.API.Repository.UserRepo;
+import com.example.Social.Network.API.Repository.*;
 import com.example.Social.Network.API.Service.PostService;
 import com.example.Social.Network.API.utils.JwtUtils;
 import jakarta.transaction.Transactional;
@@ -33,6 +31,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -60,6 +60,8 @@ private S3Service s3Service;
 private UserRepo userRepo;
 @Autowired
 private BlockListRepo blockListRepo;
+@Autowired
+private SearchRepo searchRepo;
 
 
 @Override
@@ -272,7 +274,7 @@ private BlockListRepo blockListRepo;
         List<GetListPostsResDto> getListPostsResDtoList = new ArrayList<>();
         getListPostsResDtoList.add((GetListPostsResDto) postResDtos);
 
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,"");
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,getListPostsResDtoList);
     }
 
 
@@ -545,22 +547,112 @@ private BlockListRepo blockListRepo;
 
         }
         Pageable paging = PageRequest.of(searchFunctionReqDto.getIndex(),searchFunctionReqDto.getCount());
+
+
         List<Post> posts = postRepo.search(searchFunctionReqDto.getKeyword(),paging);
 
+        List<PostResDto> postResDtos = new ArrayList<>();
+        for (Post post : posts) {
+            PostResDto postResDto = new PostResDto();
 
 
+            List<Image> images = post.getImages();
+            List<ImageResDto> imageResDtos = new ArrayList<>();
+            for (Image image : images) {
+                ImageResDto imageResDto = new ImageResDto();
+                imageResDto.setUrl(image.getUrlImage());
+                imageResDtos.add(imageResDto);
+            }
+            List<Video> videos = post.getVideos();
+            List<VideoResDto> videoResDtos = new ArrayList<>();
+            for (Video video : videos) {
+                VideoResDto videoResDto = new VideoResDto();
+                videoResDto.setUrl(video.getUrl());
+                videoResDto.setThumb(video.getThumb());
+                videoResDtos.add(videoResDto);
+            }
+            Author author = new Author();
+            author.setId(String.valueOf(user.getId()));
+            author.setName(user.getUsername());
+            author.setAvatar(user.getAvatar());
+            author.setCoins(String.valueOf(user.getCoins()));
+            author.setListings(user.getListing().toString());
 
-    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,posts);
+
+            postResDto.setId(String.valueOf(post.getId()));
+            postResDto.setName("");
+            postResDto.setDescribed(post.getDescribed());
+            postResDto.setCreated(String.valueOf(post.getCreated()));
+            postResDto.setFeel("");
+            postResDto.setIs_blocked("");
+            postResDto.setCan_edit("");
+            postResDto.setBanned("");
+            postResDto.setStatus(post.getStatus());
+            postResDto.setImage((Image) imageResDtos);
+            postResDto.setAuthor(author);
+            postResDto.setVideo((Video) videoResDtos);
+
+            postResDtos.add(postResDto);
+        }
+        List<SearchFunctionResDto> searchFunctionResDtoList = new ArrayList<>();
+        searchFunctionResDtoList.add((SearchFunctionResDto) postResDtos);
+
+        Search search = new Search();
+        search.setKeyword(searchFunctionReqDto.getKeyword());
+        Date currentTime = Date.from(Instant.now());
+        search.setCreated(currentTime);
+
+        searchRepo.save(search);
+
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,searchFunctionResDtoList);
     }
 
     @Override
     public GeneralResponse getSavedSearch(GetSavedSearchReqDto getSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+        var user =  JwtUtils.getUserFromToken(jwtService,userRepo, getSavedSearchReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
+        Pageable paging = PageRequest.of(getSavedSearchReqDto.getIndex(),getSavedSearchReqDto.getCount());
+        Search search = new Search();
+        search.setUser(user);
+        GetSavedSearchResDto getSavedSearchResDto = new GetSavedSearchResDto();
+        getSavedSearchResDto.setId(String.valueOf(search.getId()));
+        getSavedSearchResDto.setKeyword(search.getKeyword());
+        getSavedSearchResDto.setCreated(String.valueOf(search.getCreated()));
+
+
+
+
+    return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getSavedSearchResDto);
     }
 
     @Override
     public GeneralResponse delSavedSearch(DelSavedSearchReqDto delSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+
+        var user =  JwtUtils.getUserFromToken(jwtService,userRepo, delSavedSearchReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
+
+        Search search = new Search();
+        search.setUser(user);
+
+        if (delSavedSearchReqDto.getAll() == "1") {
+            searchRepo.deleteAll();
+        }
+        else if (delSavedSearchReqDto.getAll() =="0") {
+
+            delSavedSearchReqDto.setSearch_id(String.valueOf(search.getId()));
+
+            searchRepo.deleteSearchById(Long.valueOf(delSavedSearchReqDto.getSearch_id()));
+        }
+        else {
+            return new GeneralResponse(ResponseCode.PARAMETER_TYPE_NOT_VALID,ResponseMessage.PARAMETER_TYPE_NOT_VALID);
+        }
+
+
+    return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE);
     }
 
 

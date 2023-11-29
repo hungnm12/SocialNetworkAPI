@@ -29,4 +29,6 @@ Post findAllById(long Id);
     @Query("select p from User u inner join Post p on u.id = p.user.id where p.user.id = ?1")
     List<Post> getListPosts(Long Id,Pageable pageable);
 
+
+
 }
