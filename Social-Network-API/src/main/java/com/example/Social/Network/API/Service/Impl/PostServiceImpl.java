@@ -621,9 +621,6 @@ private SearchRepo searchRepo;
         getSavedSearchResDto.setKeyword(search.getKeyword());
         getSavedSearchResDto.setCreated(String.valueOf(search.getCreated()));
 
-
-
-
     return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getSavedSearchResDto);
     }
 

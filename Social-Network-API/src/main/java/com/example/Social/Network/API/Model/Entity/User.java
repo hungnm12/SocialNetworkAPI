@@ -63,6 +63,9 @@ public class User implements Serializable, UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Search> search;
 
+    @OneToMany(mappedBy = "user")
+    private List<Conversation> conversation;
+
     @Column(name = "latitude")
     private String latitude;
 
