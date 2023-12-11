@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface BlockListRepo extends PagingAndSortingRepository<BlockList,Long>, JpaRepository<BlockList,Long> {
 
 
+//    boolean existsBlockListsByUserAndUserIsBlocked(User user,User userIsBlock);
     @Query(value = "select bl.userIsBlocked from BlockList as bl where bl.user = ?1")
     List<User> getListBlockByUser(User user, Pageable pageable);
 

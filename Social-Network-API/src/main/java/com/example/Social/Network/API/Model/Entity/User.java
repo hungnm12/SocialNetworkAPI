@@ -72,8 +72,6 @@ public class User implements Serializable, UserDetails {
     @Column(name = "longitude")
     private String longitude;
 
-
-
     @Column
     private String description;
     @Column

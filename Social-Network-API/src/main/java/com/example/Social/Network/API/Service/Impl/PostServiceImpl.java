@@ -63,7 +63,12 @@ private BlockListRepo blockListRepo;
 @Autowired
 private SearchRepo searchRepo;
 
+@Autowired
+private CommentRepo commentRepo;
 
+
+@Autowired
+private MarkRepo markRepo;
 @Override
     public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
@@ -105,7 +110,9 @@ private SearchRepo searchRepo;
               chargeOnPost(user, post1);
           }
 
-          postRepo.save(post1);
+          if (!jwtService.isTokenValid(token , user)){
+              return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+          }
 
           return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl(),user.getCoins()));
       }
@@ -355,7 +362,7 @@ private SearchRepo searchRepo;
         List<String> words = Arrays.asList("giet","chem","dam","mau","danh nhau");
 
         if (existPost.getDescribed().contains(words.toString())){
-            existPost.setBlocked(true);
+            existPost.setBanned("1");
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
 
         }
@@ -475,48 +482,147 @@ private SearchRepo searchRepo;
     public GeneralResponse setMarkComment(SetMarkCommentReqDto setMarkCommentReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
        var user =  JwtUtils.getUserFromToken(jwtService,userRepo, setMarkCommentReqDto.getToken());
         if(user== null ){
-            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"The user is not exists");
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED);
         }
     if(setMarkCommentReqDto.getToken()==null|| !jwtService.isTokenValid(setMarkCommentReqDto.getToken(),user ))
     {
-        return new GeneralResponse(ResponseCode.TOKEN_INVALID,ResponseMessage.TOKEN_INVALID,"Token is not valid");
+        return new GeneralResponse(ResponseCode.TOKEN_INVALID,ResponseMessage.TOKEN_INVALID);
     }
     if(!user.isActive())
     {
-        return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The user is blocked");
+        return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS);
 
     }
     if(setMarkCommentReqDto.getComment().isEmpty() || setMarkCommentReqDto.getComment().length() > 500)
     {
-        return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The comment is not valid");
+        return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID);
     }
     if(setMarkCommentReqDto.getId()==null || setMarkCommentReqDto.getIndex() == null|| setMarkCommentReqDto.getIndex() < 0 || setMarkCommentReqDto.getCount() == null || setMarkCommentReqDto.getCount() < 1 )
     {
-        return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The parameter is not valid");
+        return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID);
 
     }
     var post = postRepo.findById(setMarkCommentReqDto.getId());
     if(post.isEmpty())
     {
-        return new GeneralResponse(ResponseCode.POST_NOT_EXIST,ResponseMessage.POST_NOT_EXIST,"The post is not exists");
+        return new GeneralResponse(ResponseCode.POST_NOT_EXIST,ResponseMessage.POST_NOT_EXIST);
+
+    }
+    if(post.get().getBanned().equals("1"))
+    {
+//        do vi phạm tiêu chuẩn cộng đồng hoặc bị hạn chế tại quốc gia
+        return new GeneralResponse(ResponseCode.POST_CAN_BE_PUBLISHED,ResponseMessage.POST_CAN_BE_PUBLISHED);
+
+    }
+       else if(post.get().getBanned().equals("2"))
+        {
+            return new GeneralResponse(ResponseCode.LIMITED_ACCESS,ResponseMessage.LIMITED_ACCESS);
+
+        }
+       var isBlockByUser = blockListRepo.existsBlockListByUserAndUserIsBlocked(user,post.get().getUser());
+       if(!isBlockByUser)
+       {
+           return new GeneralResponse(ResponseCode.LIMITED_ACCESS,ResponseMessage.LIMITED_ACCESS);
+
+       }
+        Pageable pageable = PageRequest.of(setMarkCommentReqDto.getIndex(),setMarkCommentReqDto.getCount(),Sort.by("createdTime").ascending());
+       if(setMarkCommentReqDto.getType() == null  || (!setMarkCommentReqDto.getType().equals("0") && !setMarkCommentReqDto.getType().equals("1") )   )
+       {
+
+           var comment = Comment.builder()
+               .post(post.get())
+               .content(setMarkCommentReqDto.getComment())
+               .userComment(user)
+               .createdTime(new Date(System.currentTimeMillis()))
+               .build();
+
+           var coins = user.getCoins();
+           user.setCoins(coins-1);
+           userRepo.save(user);
+           commentRepo.save(comment);
+           var listComments = commentRepo.getCommentsByPost(post.get(),pageable);
+           return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, listComments);
+
+
+       }
+
+        var findMark = markRepo.existsByUserMark(user);
+        if(!findMark)
+        {
+            return new GeneralResponse(ResponseCode.EXCEPTION_ERROR, ResponseMessage.EXCEPTION_ERROR);
+
+        }
+
+        var mark = Mark.builder()
+                .id(setMarkCommentReqDto.getId())
+                .post(post.get())
+                .content(setMarkCommentReqDto.getComment())
+                .createdTime(new Date(System.currentTimeMillis()))
+                .userMark(user)
+                .typeOfMark(setMarkCommentReqDto.getType().equals("0") ?"Fake" : "Trust")
+                .build();
+        var coins = user.getCoins();
+        user.setCoins(coins-1);
+        userRepo.save(user);
+        markRepo.save(mark);
+        var listComments = commentRepo.getCommentsByPost(post.get(),pageable);
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new CommentResDto());
+
 
     }
 
 
-    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, "Ok");
-}
+    // test case not covered, fix data for response
+    @Override
+    public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+
+
+//        Advertisement advertisement = new Advertisement();
+        User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
+        Post post = postRepo.findAllById(getListPostsReqDto.getId());
+        post.setUser(user);
+        GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
+
+//        getListPostsResDto.set_blocked(user.isAccountNonLocked());
 
 
 
 
-    private GetListPostsResDto toGetPostResDto(Post post) {
-    GetListPostsResDto resDto = new GetListPostsResDto();
+        Sort sort= null;
+        if (!StringUtils.isEmpty(getListPostsReqDto.getSortBy()) && !StringUtils.isEmpty(getListPostsReqDto.getIndex())) {
+
+            Sort.Order ord = getListPostsReqDto.getIndex().equals("asc")
+                    ? Sort.Order.asc(getListPostsReqDto.getSortBy()) : Sort.Order.desc(getListPostsReqDto.getSortBy());
+            sort = Sort.by(ord);
+
+        } else {
+            sort = Sort.by(
+                    Sort.Order.asc("opTime")
+            );
+        }
+
+
+        int page = 0;
+        if (!StringUtils.isEmpty(getListPostsReqDto.getCount()) && getListPostsReqDto.getCount() > 0) {
+            page = getListPostsReqDto.getCount() - 1;
+        }
+
+        int size = 10;
+        if (!StringUtils.isEmpty(getListPostsReqDto.getSize())) {
+            size = getListPostsReqDto.getSize();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<GetListPostsResDto> res = postRepo.getListPosts(
+                getListPostsReqDto.getId(),
+                pageable
+        );
 
 
 
-    return  resDto;
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, res);
     }
-
 
     //Test case no covered
     @Override

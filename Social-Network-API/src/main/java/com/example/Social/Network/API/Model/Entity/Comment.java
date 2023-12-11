@@ -1,11 +1,17 @@
 package com.example.Social.Network.API.Model.Entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 
 import java.util.Date;
 
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Comment {
 
     @Id
@@ -16,7 +22,7 @@ public class Comment {
     private Post post;
 
     @ManyToOne
-    private User user;
+    private User userComment;
 
     @Column(nullable = false)
     private String content;
