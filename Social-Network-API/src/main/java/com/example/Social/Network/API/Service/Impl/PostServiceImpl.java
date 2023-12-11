@@ -13,14 +13,14 @@ import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.GetSavedS
 import com.example.Social.Network.API.Model.ReqDto.SearchReqRelatedDto.SearchFunctionReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Model.ResDto.PostResDto.*;
+import com.example.Social.Network.API.Model.ResDto.SearchResDto.GetSavedSearchResDto;
 import com.example.Social.Network.API.Model.ResDto.SearchResDto.SearchFunctionResDto;
-import com.example.Social.Network.API.Repository.ImageRepo;
-import com.example.Social.Network.API.Repository.PostRepo;
-import com.example.Social.Network.API.Repository.UserRepo;
+import com.example.Social.Network.API.Repository.*;
 import com.example.Social.Network.API.Service.PostService;
 import com.example.Social.Network.API.utils.JwtUtils;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +31,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -56,6 +58,10 @@ private ImageRepo imageRepo;
 private S3Service s3Service;
 @Autowired
 private UserRepo userRepo;
+@Autowired
+private BlockListRepo blockListRepo;
+@Autowired
+private SearchRepo searchRepo;
 
 
 @Override
@@ -66,18 +72,6 @@ private UserRepo userRepo;
           String urlImg = s3Service.uploadFile(image).get("url");
           Post post1 = new Post();
           Image image1 = new Image();
-          image1.setUrlImage(urlImg);
-
-          Video video1 = new Video(urlImg,post1);
-
-          post1.setDescribed(described);
-          post1.setStatus(status);
-          post1.setUrl(generatePostUrl());
-          User user = getUserFromToken(jwtService,userRepo, token);
-          post1.setUser(user);
-          chargeOnPost(user, post1);
-          postRepo.save(post1);
-
 
           if (image.getOriginalFilename() != null && !image.getOriginalFilename().isEmpty()) {
               int imageCount = Math.toIntExact(imageRepo.countByPostId(post1.getId()));
@@ -93,19 +87,30 @@ private UserRepo userRepo;
           if (isSufficientSize(video)) {
               return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
           }
+          image1.setUrlImage(urlImg);
 
-          if (user.getCoins() < 4){
-              return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
-          }
+          Video video1 = new Video(urlImg,post1);
 
+          post1.setDescribed(described);
+          post1.setStatus(status);
+          post1.setUrl(generatePostUrl());
+          User user = getUserFromToken(jwtService,userRepo, token);
           if (!jwtService.isTokenValid(token , user)){
               return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
           }
+          post1.setUser(user);
+          if (user.getCoins() < 4){
+              return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
+          } else {
+              chargeOnPost(user, post1);
+          }
+
+          postRepo.save(post1);
 
           return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl(),user.getCoins()));
       }
       catch (RuntimeException e ) {
-          return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,"","");
+          return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,ResponseMessage.EXCEPTION_ERROR,"");
 
       }
     }
@@ -146,16 +151,37 @@ private UserRepo userRepo;
         userRepo.save(user);
 
     }
-// block do violate community standards --> banned, image list, can_mark, can_rate
+// block do violate community standards --> banned, can_mark, can_rate
     @Override
     public GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
         Post post = new Post();
         postRepo.getById(getPostReqDto.getId());
         User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
-        post.setUser(user);
-        List<Image> images = post.getImages();
+        if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
+        if (!user.isAccountNonLocked()) {
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
 
+        }
+
+        List<Image> images = post.getImages();
+        List<ImageResDto> imageResDtos = new ArrayList<>();
+        for (Image image : images) {
+            ImageResDto imageResDto = new ImageResDto();
+            imageResDto.setUrl(image.getUrlImage());
+            imageResDto.setId(String.valueOf(image.getId()));
+            imageResDtos.add(imageResDto);
+        }
+        List<Video> videos = post.getVideos();
+        List<VideoResDto> videoResDtos = new ArrayList<>();
+        for (Video video : videos) {
+            VideoResDto videoResDto = new VideoResDto();
+            videoResDto.setUrl(video.getUrl());
+            videoResDto.setThumb(video.getThumb());
+            videoResDtos.add(videoResDto);
+        }
         Author author = new Author();
         author.setId(String.valueOf(user.getId()));
         author.setName(user.getUsername());
@@ -163,7 +189,10 @@ private UserRepo userRepo;
         author.setCoins(String.valueOf(user.getCoins()));
         author.setListings(user.getListing().toString());
 
-
+        Category category = new Category();
+        category.setId(category.getId());
+        category.setName(category.getName());
+        category.setHas_name(category.getHas_name());
 
         GetPostResDto getPostResDto = new GetPostResDto();
         getPostResDto.setId(post.getId());
@@ -176,22 +205,76 @@ private UserRepo userRepo;
         getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
         getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
         getPostResDto.setIsRated(String.valueOf(post.isRated()));
-//        getPostResDto.setImage((post.getImages().toString()));
+        getPostResDto.setImage((Image) imageResDtos);
+        getPostResDto.setVideo((Video) videoResDtos);
+        getPostResDto.setAuthor(author);
+        getPostResDto.setCategory(category);
 
-        if (!user.isAccountNonLocked()) {
-            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
-
-        }
-
-
-
-
-        if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getPostResDto);
     }
 
 
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getPostResDto);
+    @Override
+    public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
+        if(user == null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED);
+        }
+
+
+        Pageable paging = PageRequest.of(getListPostsReqDto.getIndex(), getListPostsReqDto.getCount());
+
+        List<Post> posts = postRepo.getListPosts(getListPostsReqDto.getId(),paging);
+
+
+
+        List<PostResDto> postResDtos = new ArrayList<>();
+        for (Post post : posts) {
+            PostResDto postResDto = new PostResDto();
+
+
+            List<Image> images = post.getImages();
+            List<ImageResDto> imageResDtos = new ArrayList<>();
+            for (Image image : images) {
+                ImageResDto imageResDto = new ImageResDto();
+                imageResDto.setUrl(image.getUrlImage());
+                imageResDtos.add(imageResDto);
+            }
+            List<Video> videos = post.getVideos();
+            List<VideoResDto> videoResDtos = new ArrayList<>();
+            for (Video video : videos) {
+                VideoResDto videoResDto = new VideoResDto();
+                videoResDto.setUrl(video.getUrl());
+                videoResDto.setThumb(video.getThumb());
+                videoResDtos.add(videoResDto);
+            }
+            Author author = new Author();
+            author.setId(String.valueOf(user.getId()));
+            author.setName(user.getUsername());
+            author.setAvatar(user.getAvatar());
+            author.setCoins(String.valueOf(user.getCoins()));
+            author.setListings(user.getListing().toString());
+
+
+            postResDto.setId(String.valueOf(post.getId()));
+            postResDto.setName("");
+            postResDto.setDescribed(post.getDescribed());
+            postResDto.setCreated(String.valueOf(post.getCreated()));
+            postResDto.setFeel("");
+            postResDto.setIs_blocked("");
+            postResDto.setCan_edit("");
+            postResDto.setBanned("");
+            postResDto.setStatus(post.getStatus());
+            postResDto.setImage((Image) imageResDtos);
+            postResDto.setAuthor(author);
+            postResDto.setVideo((Video) videoResDtos);
+
+            postResDtos.add(postResDto);
+        }
+        List<GetListPostsResDto> getListPostsResDtoList = new ArrayList<>();
+        getListPostsResDtoList.add((GetListPostsResDto) postResDtos);
+
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,getListPostsResDtoList);
     }
 
 
@@ -210,6 +293,9 @@ private UserRepo userRepo;
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
 
+        if (!user.isAccountNonExpired()) {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
 
         if (user.getCoins() < 4){
             return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
@@ -231,6 +317,9 @@ private UserRepo userRepo;
             image1.setUrlImage(urlImg);
 
             existPost.getImages().add(image1);
+        }
+        else {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
         }
 
         if (!image_sort.isEmpty()) {
@@ -257,9 +346,7 @@ private UserRepo userRepo;
                 }
         }
 
-        if (!user.isAccountNonExpired()) {
-            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
-        }
+
         if (!jwtService.isTokenValid(token , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }
@@ -272,8 +359,20 @@ private UserRepo userRepo;
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
 
         }
-        postRepo.save(existPost);
 
+        if (auto_accept.equals("0")){
+            postRepo.save(existPost);
+
+        }
+        else if (auto_accept.equals("1")){
+            postRepo.save(existPost);
+
+        }
+        else {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID);
+        }
+
+        postRepo.save(existPost);
 
         return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new EditPostResDto(user.getCoins().toString()));
 
@@ -291,16 +390,21 @@ private UserRepo userRepo;
         User user = getUserFromToken(jwtService,userRepo, token);
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
-
-        chargeOnPost(user,existPost);
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
+        if (!user.isActive()){
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED);        }
 
         if (user.getCoins() < 4){
             return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
         }
-
-        if (!jwtService.isTokenValid(token , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        else {
+            chargeOnPost(user,existPost);
         }
+
+
+
 
         postRepo.delete(existPost);
 
@@ -313,15 +417,16 @@ private UserRepo userRepo;
         User user = getUserFromToken(jwtService,userRepo, token);
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
 
       existPost.setSubject(subject);
       existPost.setDetails(details);
       existPost.setReported(true);
       postRepo.save(existPost);
 
-        if (!jwtService.isTokenValid(token , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-        }
+
 
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE);
     }
@@ -333,6 +438,9 @@ private UserRepo userRepo;
         User user = getUserFromToken(jwtService,userRepo, token);
         Post existPost = postRepo.findAllById(Id);
         existPost.setUser(user);
+        if (!jwtService.isTokenValid(token , user)){
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
 
         if (type.equals("1")) {
             existPost.setKudos(existPost.getKudos() + 1);
@@ -399,111 +507,149 @@ private UserRepo userRepo;
 }
 
 
-    // test case not covered, fix data for response
-    @Override
-    public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
 
 
-//        Advertisement advertisement = new Advertisement();
-        User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
-        Post post = postRepo.findAllById(getListPostsReqDto.getId());
-        post.setUser(user);
-        GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
-
-//        getListPostsResDto.set_blocked(user.isAccountNonLocked());
+    private GetListPostsResDto toGetPostResDto(Post post) {
+    GetListPostsResDto resDto = new GetListPostsResDto();
 
 
 
-
-        Sort sort= null;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getSortBy()) && !StringUtils.isEmpty(getListPostsReqDto.getIndex())) {
-
-            Sort.Order ord = getListPostsReqDto.getIndex().equals("asc")
-                    ? Sort.Order.asc(getListPostsReqDto.getSortBy()) : Sort.Order.desc(getListPostsReqDto.getSortBy());
-            sort = Sort.by(ord);
-
-        } else {
-            sort = Sort.by(
-                    Sort.Order.asc("opTime")
-            );
-        }
-
-
-        int page = 0;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getCount()) && getListPostsReqDto.getCount() > 0) {
-            page = getListPostsReqDto.getCount() - 1;
-        }
-
-        int size = 10;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getSize())) {
-            size = getListPostsReqDto.getSize();
-        }
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<GetListPostsResDto> res = postRepo.getListPosts(
-                getListPostsReqDto.getId(),
-                pageable
-        );
-
-
-
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, res);
+    return  resDto;
     }
+
 
     //Test case no covered
     @Override
     public GeneralResponse search(SearchFunctionReqDto searchFunctionReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
         log.info("[search] - Start with input: {}", searchFunctionReqDto);
 
-
-        Sort sort= null;
-        if (!StringUtils.isEmpty(searchFunctionReqDto.getSortBy()) && !StringUtils.isEmpty(searchFunctionReqDto.getIndex())) {
-
-            Sort.Order ord = searchFunctionReqDto.getIndex().equals("asc")
-                    ? Sort.Order.asc(searchFunctionReqDto.getSortBy()) : Sort.Order.desc(searchFunctionReqDto.getSortBy());
-            sort = Sort.by(ord);
-
-        } else {
-            sort = Sort.by(
-                    Sort.Order.asc("opTime")
-            );
+         var user = JwtUtils.getUserFromToken(jwtService,userRepo, searchFunctionReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"The user is not exists");
         }
-
-
-        int page = 0;
-        if (!StringUtils.isEmpty(searchFunctionReqDto.getCount()) && searchFunctionReqDto.getCount() > 0) {
-            page = searchFunctionReqDto.getCount() - 1;
+        if(searchFunctionReqDto.getToken()==null|| !jwtService.isTokenValid(searchFunctionReqDto.getToken(),user ))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID,ResponseMessage.TOKEN_INVALID,"Token is not valid");
         }
+        if(!user.isActive())
+        {
+            return new GeneralResponse(ResponseCode.NOT_ACCESS,ResponseMessage.NOT_ACCESS,"The user is blocked");
 
-        int size = 10;
-        if (!StringUtils.isEmpty(searchFunctionReqDto.getSize())) {
-            size = searchFunctionReqDto.getSize();
         }
+        if (!searchFunctionReqDto.getId().equals(user.getId())){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
+        }
+        if (searchFunctionReqDto.getKeyword().isEmpty()) {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
+        }
+        if(searchFunctionReqDto.getIndex() ==null|| searchFunctionReqDto.getCount()==null){
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID,"The parameter is not valid");
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        }
+        Pageable paging = PageRequest.of(searchFunctionReqDto.getIndex(),searchFunctionReqDto.getCount());
 
 
+        List<Post> posts = postRepo.search(searchFunctionReqDto.getKeyword(),paging);
+
+        List<PostResDto> postResDtos = new ArrayList<>();
+        for (Post post : posts) {
+            PostResDto postResDto = new PostResDto();
 
 
+            List<Image> images = post.getImages();
+            List<ImageResDto> imageResDtos = new ArrayList<>();
+            for (Image image : images) {
+                ImageResDto imageResDto = new ImageResDto();
+                imageResDto.setUrl(image.getUrlImage());
+                imageResDtos.add(imageResDto);
+            }
+            List<Video> videos = post.getVideos();
+            List<VideoResDto> videoResDtos = new ArrayList<>();
+            for (Video video : videos) {
+                VideoResDto videoResDto = new VideoResDto();
+                videoResDto.setUrl(video.getUrl());
+                videoResDto.setThumb(video.getThumb());
+                videoResDtos.add(videoResDto);
+            }
+            Author author = new Author();
+            author.setId(String.valueOf(user.getId()));
+            author.setName(user.getUsername());
+            author.setAvatar(user.getAvatar());
+            author.setCoins(String.valueOf(user.getCoins()));
+            author.setListings(user.getListing().toString());
 
 
-        Page<SearchFunctionResDto> res = postRepo.search(searchFunctionReqDto.getKeyword(),pageable);
+            postResDto.setId(String.valueOf(post.getId()));
+            postResDto.setName("");
+            postResDto.setDescribed(post.getDescribed());
+            postResDto.setCreated(String.valueOf(post.getCreated()));
+            postResDto.setFeel("");
+            postResDto.setIs_blocked("");
+            postResDto.setCan_edit("");
+            postResDto.setBanned("");
+            postResDto.setStatus(post.getStatus());
+            postResDto.setImage((Image) imageResDtos);
+            postResDto.setAuthor(author);
+            postResDto.setVideo((Video) videoResDtos);
 
+            postResDtos.add(postResDto);
+        }
+        List<SearchFunctionResDto> searchFunctionResDtoList = new ArrayList<>();
+        searchFunctionResDtoList.add((SearchFunctionResDto) postResDtos);
 
+        Search search = new Search();
+        search.setKeyword(searchFunctionReqDto.getKeyword());
+        Date currentTime = Date.from(Instant.now());
+        search.setCreated(currentTime);
 
+        searchRepo.save(search);
 
-    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, res);
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,searchFunctionResDtoList);
     }
 
     @Override
     public GeneralResponse getSavedSearch(GetSavedSearchReqDto getSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+        var user =  JwtUtils.getUserFromToken(jwtService,userRepo, getSavedSearchReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
+        Pageable paging = PageRequest.of(getSavedSearchReqDto.getIndex(),getSavedSearchReqDto.getCount());
+        Search search = new Search();
+        search.setUser(user);
+        GetSavedSearchResDto getSavedSearchResDto = new GetSavedSearchResDto();
+        getSavedSearchResDto.setId(String.valueOf(search.getId()));
+        getSavedSearchResDto.setKeyword(search.getKeyword());
+        getSavedSearchResDto.setCreated(String.valueOf(search.getCreated()));
+
+    return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getSavedSearchResDto);
     }
 
     @Override
     public GeneralResponse delSavedSearch(DelSavedSearchReqDto delSavedSearchReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-        return null;
+
+        var user =  JwtUtils.getUserFromToken(jwtService,userRepo, delSavedSearchReqDto.getToken());
+        if(user== null ){
+            return  new GeneralResponse(ResponseCode.USER_NOT_VALIDATED,ResponseMessage.USER_NOT_VALIDATED,"");
+        }
+
+        Search search = new Search();
+        search.setUser(user);
+
+        if (delSavedSearchReqDto.getAll() == "1") {
+            searchRepo.deleteAll();
+        }
+        else if (delSavedSearchReqDto.getAll() =="0") {
+
+            delSavedSearchReqDto.setSearch_id(String.valueOf(search.getId()));
+
+            searchRepo.deleteSearchById(Long.valueOf(delSavedSearchReqDto.getSearch_id()));
+        }
+        else {
+            return new GeneralResponse(ResponseCode.PARAMETER_TYPE_NOT_VALID,ResponseMessage.PARAMETER_TYPE_NOT_VALID);
+        }
+
+
+    return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE);
     }
 
 

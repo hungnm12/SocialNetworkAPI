@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GetListConversationReqDto {
     private String token;
-
+    private Integer count;
+    private Integer index;
 }

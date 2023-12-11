@@ -17,7 +17,7 @@ public class Video {
 
 
     @Column(name = "url_video")
-    private String urlVideo;
+    private String url;
 
     @Column(name = "thumb")
     private  String thumb;

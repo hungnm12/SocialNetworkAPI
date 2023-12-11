@@ -27,6 +27,10 @@ public class GeneralResponse {
     @JsonProperty("data")
     private Object data;
 
+    @Setter
+    @JsonProperty("num_new_message")
+    private Long numNewMessage;
+
 
     public GeneralResponse(String code,  String message, Object data) {
         this.code = code;
@@ -41,6 +45,13 @@ public class GeneralResponse {
 
     }
 
+    public GeneralResponse(String code, String message, Object data, Long numNewMessage) {
+        this.code = code;
+        this.message = message;
+        this.data = data;
+        this.numNewMessage = numNewMessage;
+
+    }
 
     public GeneralResponse(int httpNoContent, String s, String message, Object o) {
     }
