@@ -67,52 +67,51 @@ private SearchRepo searchRepo;
 @Override
     public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-      try {
-          image.getOriginalFilename();
-          String urlImg = s3Service.uploadFile(image).get("url");
-          Post post1 = new Post();
-          Image image1 = new Image();
+    User user = getUserFromToken(jwtService,userRepo, token);
+    if (!jwtService.isTokenValid(token , user)){
+        return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+    }
+    Post post1 = new Post();
+    post1.setUser(user);
+    post1.setDescribed(described);
+    post1.setStatus(status);
+    post1.setUrl(generatePostUrl());
+    if (user.getCoins() < 4) {
+        return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS, ResponseMessage.NOT_ENOUGH_COINS, "");
+    } else {
+        chargeOnPost(user, post1);
+    }
+    if (image != null &&!image.isEmpty() ) {
 
-          if (image.getOriginalFilename() != null && !image.getOriginalFilename().isEmpty()) {
-              int imageCount = Math.toIntExact(imageRepo.countByPostId(post1.getId()));
-              if (imageCount >= 5) {
-                  return new GeneralResponse(ResponseCode.MAX_NUM_OF_IMG, ResponseMessage.MAX_NUM_OF_IMG, "");
-              }
-          }
 
-          if (isSufficientSize(image)) {
-              return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
-          }
+        try {
+            image.getOriginalFilename();
+            String urlImg = s3Service.uploadFile(image).get("url");
+            Image image1 = new Image();
+            if (image.getOriginalFilename() != null && !image.getOriginalFilename().isEmpty()) {
+                int imageCount = Math.toIntExact(imageRepo.countByPostId(post1.getId()));
+                if (imageCount >= 5) {
+                    return new GeneralResponse(ResponseCode.MAX_NUM_OF_IMG, ResponseMessage.MAX_NUM_OF_IMG, "");
+                }
+            }
+            if (isSufficientSize(image)) {
+                return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG, ResponseMessage.FILE_SIZE_TOO_BIG, "");
+            }
+            if (isSufficientSize(video)) {
+                return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG, ResponseMessage.FILE_SIZE_TOO_BIG, "");
+            }
+            image1.setUrlImage(urlImg);
+            Video video1 = new Video(urlImg, post1);
 
-          if (isSufficientSize(video)) {
-              return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
-          }
-          image1.setUrlImage(urlImg);
 
-          Video video1 = new Video(urlImg,post1);
+        } catch (RuntimeException e) {
+            return new GeneralResponse(ResponseCode.EXCEPTION_ERROR, ResponseMessage.EXCEPTION_ERROR, "");
 
-          post1.setDescribed(described);
-          post1.setStatus(status);
-          post1.setUrl(generatePostUrl());
-          User user = getUserFromToken(jwtService,userRepo, token);
-          if (!jwtService.isTokenValid(token , user)){
-              return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-          }
-          post1.setUser(user);
-          if (user.getCoins() < 4){
-              return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
-          } else {
-              chargeOnPost(user, post1);
-          }
+        }
 
-          postRepo.save(post1);
-
-          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl(),user.getCoins()));
-      }
-      catch (RuntimeException e ) {
-          return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,ResponseMessage.EXCEPTION_ERROR,"");
-
-      }
+    }
+    postRepo.save(post1);
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(), post1.getUrl(), user.getCoins()));
     }
 
 
@@ -616,10 +615,13 @@ private SearchRepo searchRepo;
         Pageable paging = PageRequest.of(getSavedSearchReqDto.getIndex(),getSavedSearchReqDto.getCount());
         Search search = new Search();
         search.setUser(user);
+
         GetSavedSearchResDto getSavedSearchResDto = new GetSavedSearchResDto();
         getSavedSearchResDto.setId(String.valueOf(search.getId()));
         getSavedSearchResDto.setKeyword(search.getKeyword());
         getSavedSearchResDto.setCreated(String.valueOf(search.getCreated()));
+
+
 
     return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getSavedSearchResDto);
     }
