@@ -12,16 +12,14 @@ import com.example.Social.Network.API.Repository.UserRepo;
 import com.example.Social.Network.API.Service.PushSettingServiceI;
 import com.example.Social.Network.API.utils.CheckUtils;
 import com.example.Social.Network.API.utils.JwtUtils;
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
 import jakarta.transaction.Transactional;
 import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -153,20 +151,20 @@ public class PushSettingServiceImpl implements PushSettingServiceI {
         if(previousPushSetting== null)
         {
             pushSettingRepo.save(pushSetting);
-
             return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,"Ok");
 
         }
         else{
-            try {
-                if(CheckUtils.difference(previousPushSetting, pushSetting).isEmpty())
+                pushSetting.setId(previousPushSetting.getId());
+                DiffNode diff = ObjectDifferBuilder.buildDefault().compare(previousPushSetting, pushSetting);
+                if(!diff.hasChanges())
                 {
                     return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE,"There are no changes");
 
                 }
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+
+
+            System.out.println("3");
             previousPushSetting.setUser(user);
             previousPushSetting.setLikeComment(likeComment);
             previousPushSetting.setFromFriends(fromFriends);
@@ -181,7 +179,6 @@ public class PushSettingServiceImpl implements PushSettingServiceI {
             previousPushSetting.setLedOn(ledOn);
             pushSettingRepo.save(previousPushSetting);
             return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE,"Update success");
-
         }
 
 

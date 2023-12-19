@@ -60,6 +60,18 @@ public class FriendServiceImpl implements FriendServiceI {
 // yêu cầu kết bạn từ người chủ tài khoản đến người dùng nào đó.
     @Override
     public GeneralResponse setRequestedFriend(String token, Long userId) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+        if(user == null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
+
+        }
+
         if (token.isEmpty() || userId == null) {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The parameter is not enough");
 
@@ -94,6 +106,18 @@ public class FriendServiceImpl implements FriendServiceI {
 
     @Override
     public GeneralResponse setAcceptFriend(String token, Long userId, String isAccept) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+        if(user == null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
+
+        }
+
         if(token.isEmpty() || isAccept.isEmpty())
         {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The parameter is not enough");
@@ -135,12 +159,22 @@ public class FriendServiceImpl implements FriendServiceI {
 
     @Override
     public GeneralResponse setBlock(String token, Long userId, String type) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+        if(user == null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
+
+        }
         if(token.isEmpty() || userId == null ||(!type.equals("0") && !type.equals("1")))
         {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The parameter is not enough or not valid");
 
         }
-        var user= JwtUtils.getUserFromToken(jwtService,userRepo,token);
         var isBlockedUser = userRepo.findById(userId);
 
         if( isBlockedUser.isEmpty() )
@@ -191,6 +225,17 @@ public class FriendServiceImpl implements FriendServiceI {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The parameter is not enough or not valid");
 
         }
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+        if(user == null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
+
+        }
         var currentUser = JwtUtils.getUserFromToken(jwtService,userRepo, token);
 
         if(currentUser ==null || !userRepo.existsUserById(currentUser.getId()))
@@ -214,7 +259,12 @@ public class FriendServiceImpl implements FriendServiceI {
     @Override
     public GeneralResponse getListSuggestedFriends(String token, Integer index, Integer count) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
         var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
-        if(!jwtService.isTokenValid(token,user) || token==null)
+        if(user == null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
         {
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
 
@@ -236,9 +286,14 @@ public class FriendServiceImpl implements FriendServiceI {
         }
 
         var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
-        if(user==null)
+        if(user == null)
         {
-            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED, "The user does not exists ");
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
 
         }
         Pageable paging = PageRequest.of(index,count);
@@ -269,6 +324,17 @@ public class FriendServiceImpl implements FriendServiceI {
         if(token.isEmpty() || index == null || count == null )
         {
             return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID, "The parameter is not enough");
+
+        }
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+        if(user == null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
 
         }
         var currentUser = JwtUtils.getUserFromToken(jwtService, userRepo, token);
