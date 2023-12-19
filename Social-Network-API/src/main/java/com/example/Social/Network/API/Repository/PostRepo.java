@@ -14,6 +14,8 @@ import java.util.List;
 public interface PostRepo extends JpaRepository<Post, Long>, PagingAndSortingRepository<Post,Long> {
 Post findAllById(long Id);
 
+Post findById(long Id);
+
     @Query("select p," +
 //            " t.token as token , " +
             "u.id as user_id " +

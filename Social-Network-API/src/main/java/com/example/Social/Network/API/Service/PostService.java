@@ -24,7 +24,7 @@ public interface PostService {
 
 
 
-GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
+GeneralResponse getPost(String token, Long Id) throws ResponseException, ExecutionException, InterruptedException, TimeoutException;
 
     GeneralResponse editPost(String token, Long Id, String described, String status, MultipartFile image, String image_del, String image_sort, MultipartFile video, String auto_accept)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException;

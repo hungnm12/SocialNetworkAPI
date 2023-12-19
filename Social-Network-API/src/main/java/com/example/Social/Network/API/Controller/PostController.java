@@ -89,12 +89,15 @@ public class PostController {
                 return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
             }
         }
-        @PostMapping("/get_post")
+        @GetMapping("/get_post")
     public GeneralResponse getPost(
-            GetPostReqDto getPostReqDto
+                @RequestParam("token") String token,
+                @RequestParam("id") Long Id
+//                GetPostReqDto getPostReqDto
         ) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
         try {
-            return postService.getPost(getPostReqDto);
+
+            return postService.getPost(token,Id);
         }
         catch (ResponseException e) {
                 return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
