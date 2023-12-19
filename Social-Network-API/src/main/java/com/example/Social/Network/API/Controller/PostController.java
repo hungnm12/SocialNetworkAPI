@@ -89,7 +89,7 @@ public class PostController {
                 return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
             }
         }
-        @GetMapping("/get_post")
+        @PostMapping("/get_post")
     public GeneralResponse getPost(
                 @RequestParam("token") String token,
                 @RequestParam("id") Long Id
