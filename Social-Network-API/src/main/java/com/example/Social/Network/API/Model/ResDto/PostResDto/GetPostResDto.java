@@ -27,10 +27,14 @@ public class GetPostResDto {
     private String messages;
     private String fake;
 
-    @Embedded
-    private Image image;
-    @Embedded
-    private Video video;
+    private List<Image> image;
+
+    private List<Video> video;
+
+//    @Embedded
+//    private Image image;
+//    @Embedded
+//    private Video video;
     @Embedded
     private Author author;
     @Embedded
