@@ -572,58 +572,6 @@ private MarkRepo markRepo;
     }
 
 
-    // test case not covered, fix data for response
-    @Override
-    public GeneralResponse getListPosts(GetListPostsReqDto getListPostsReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-
-
-//        Advertisement advertisement = new Advertisement();
-        User user = getUserFromToken(jwtService,userRepo, getListPostsReqDto.getToken());
-        Post post = postRepo.findAllById(getListPostsReqDto.getId());
-        post.setUser(user);
-        GetListPostsResDto getListPostsResDto = new GetListPostsResDto();
-
-//        getListPostsResDto.set_blocked(user.isAccountNonLocked());
-
-
-
-
-        Sort sort= null;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getSortBy()) && !StringUtils.isEmpty(getListPostsReqDto.getIndex())) {
-
-            Sort.Order ord = getListPostsReqDto.getIndex().equals("asc")
-                    ? Sort.Order.asc(getListPostsReqDto.getSortBy()) : Sort.Order.desc(getListPostsReqDto.getSortBy());
-            sort = Sort.by(ord);
-
-        } else {
-            sort = Sort.by(
-                    Sort.Order.asc("opTime")
-            );
-        }
-
-
-        int page = 0;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getCount()) && getListPostsReqDto.getCount() > 0) {
-            page = getListPostsReqDto.getCount() - 1;
-        }
-
-        int size = 10;
-        if (!StringUtils.isEmpty(getListPostsReqDto.getSize())) {
-            size = getListPostsReqDto.getSize();
-        }
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<GetListPostsResDto> res = postRepo.getListPosts(
-                getListPostsReqDto.getId(),
-                pageable
-        );
-
-
-
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, res);
-    }
-
     //Test case no covered
     @Override
     public GeneralResponse search(SearchFunctionReqDto searchFunctionReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
