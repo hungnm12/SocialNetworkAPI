@@ -72,54 +72,56 @@ private MarkRepo markRepo;
 @Override
     public GeneralResponse addPost(String token, MultipartFile image, MultipartFile video, String described, String status)
             throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
-      try {
-          image.getOriginalFilename();
-          String urlImg = s3Service.uploadFile(image).get("url");
-          Post post1 = new Post();
-          Image image1 = new Image();
+    User user = getUserFromToken(jwtService,userRepo, token);
+    if(user == null)
+    {
+        return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
 
-          if (image.getOriginalFilename() != null && !image.getOriginalFilename().isEmpty()) {
-              int imageCount = Math.toIntExact(imageRepo.countByPostId(post1.getId()));
-              if (imageCount >= 5) {
-                  return new GeneralResponse(ResponseCode.MAX_NUM_OF_IMG, ResponseMessage.MAX_NUM_OF_IMG, "");
-              }
-          }
+    }
+    if (!jwtService.isTokenValid(token , user)){
+        return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+    }
+    Post post1 = new Post();
+    post1.setUser(user);
+    post1.setDescribed(described);
+    post1.setStatus(status);
+    post1.setUrl(generatePostUrl());
+    if (user.getCoins() < 4) {
+        return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS, ResponseMessage.NOT_ENOUGH_COINS, "");
+    } else {
+        chargeOnPost(user, post1);
+    }
+    if (image != null &&!image.isEmpty() ) {
 
-          if (isSufficientSize(image)) {
-              return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
-          }
 
-          if (isSufficientSize(video)) {
-              return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG,ResponseMessage.FILE_SIZE_TOO_BIG,"");
-          }
-          image1.setUrlImage(urlImg);
+        try {
+            image.getOriginalFilename();
+            String urlImg = s3Service.uploadFile(image).get("url");
+            Image image1 = new Image();
+            if (image.getOriginalFilename() != null && !image.getOriginalFilename().isEmpty()) {
+                int imageCount = Math.toIntExact(imageRepo.countByPostId(post1.getId()));
+                if (imageCount >= 5) {
+                    return new GeneralResponse(ResponseCode.MAX_NUM_OF_IMG, ResponseMessage.MAX_NUM_OF_IMG, "");
+                }
+            }
+            if (isSufficientSize(image)) {
+                return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG, ResponseMessage.FILE_SIZE_TOO_BIG, "");
+            }
+            if (isSufficientSize(video)) {
+                return new GeneralResponse(ResponseCode.FILE_SIZE_TOO_BIG, ResponseMessage.FILE_SIZE_TOO_BIG, "");
+            }
+            image1.setUrlImage(urlImg);
+            Video video1 = new Video(urlImg, post1);
 
-          Video video1 = new Video(urlImg,post1);
 
-          post1.setDescribed(described);
-          post1.setStatus(status);
-          post1.setUrl(generatePostUrl());
-          User user = getUserFromToken(jwtService,userRepo, token);
-          if (!jwtService.isTokenValid(token , user)){
-              return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-          }
-          post1.setUser(user);
-          if (user.getCoins() < 4){
-              return new GeneralResponse(ResponseCode.NOT_ENOUGH_COINS,ResponseMessage.NOT_ENOUGH_COINS,"");
-          } else {
-              chargeOnPost(user, post1);
-          }
+        } catch (RuntimeException e) {
+            return new GeneralResponse(ResponseCode.EXCEPTION_ERROR, ResponseMessage.EXCEPTION_ERROR, "");
 
-          if (!jwtService.isTokenValid(token , user)){
-              return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
-          }
+        }
 
-          return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(),post1.getUrl(),user.getCoins()));
-      }
-      catch (RuntimeException e ) {
-          return new GeneralResponse(ResponseCode.EXCEPTION_ERROR,ResponseMessage.EXCEPTION_ERROR,"");
-
-      }
+    }
+    postRepo.save(post1);
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new PostDto(post1.getId(), post1.getUrl(), user.getCoins()));
     }
 
 
@@ -160,65 +162,77 @@ private MarkRepo markRepo;
     }
 // block do violate community standards --> banned, can_mark, can_rate
     @Override
-    public GeneralResponse getPost(GetPostReqDto getPostReqDto) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+    public GeneralResponse getPost(String token, Long Id) throws ResponseException, ExecutionException, InterruptedException, TimeoutException {
+        User user = getUserFromToken(jwtService, userRepo, token);
+        if (user == null) {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
 
-        Post post = new Post();
-        postRepo.getById(getPostReqDto.getId());
-        User user = getUserFromToken(jwtService,userRepo, getPostReqDto.getToken() );
-        if (!jwtService.isTokenValid(getPostReqDto.getToken() , user)){
-            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
+        }
+        if (!jwtService.isTokenValid(token, user)) {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID, "");
         }
         if (!user.isAccountNonLocked()) {
-            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE,ResponseMessage.ACTION_BEEN_DONE_PRE,"");
+            return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
 
         }
+        System.out.println("123");
+try {
 
-        List<Image> images = post.getImages();
-        List<ImageResDto> imageResDtos = new ArrayList<>();
-        for (Image image : images) {
-            ImageResDto imageResDto = new ImageResDto();
-            imageResDto.setUrl(image.getUrlImage());
-            imageResDto.setId(String.valueOf(image.getId()));
-            imageResDtos.add(imageResDto);
-        }
-        List<Video> videos = post.getVideos();
-        List<VideoResDto> videoResDtos = new ArrayList<>();
-        for (Video video : videos) {
-            VideoResDto videoResDto = new VideoResDto();
-            videoResDto.setUrl(video.getUrl());
-            videoResDto.setThumb(video.getThumb());
-            videoResDtos.add(videoResDto);
-        }
-        Author author = new Author();
-        author.setId(String.valueOf(user.getId()));
-        author.setName(user.getUsername());
-        author.setAvatar(user.getAvatar());
-        author.setCoins(String.valueOf(user.getCoins()));
-        author.setListings(user.getListing().toString());
+    Post post = postRepo.findById(Id).orElseThrow();
+    System.out.println("123123213");
 
-        Category category = new Category();
-        category.setId(category.getId());
-        category.setName(category.getName());
-        category.setHas_name(category.getHas_name());
-
-        GetPostResDto getPostResDto = new GetPostResDto();
-        getPostResDto.setId(post.getId());
-        getPostResDto.setUrl(post.getUrl());
-        getPostResDto.setCreated(String.valueOf(post.getCreated()));
-        getPostResDto.setModified(String.valueOf(post.getModified()));
-        getPostResDto.setDisappointed(String.valueOf(post.getDissapointed()));
-        getPostResDto.setKudos(String.valueOf(post.getKudos()));
-        getPostResDto.setFake(String.valueOf(Long.valueOf(post.getFake())));
-        getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
-        getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
-        getPostResDto.setIsRated(String.valueOf(post.isRated()));
-        getPostResDto.setImage((Image) imageResDtos);
-        getPostResDto.setVideo((Video) videoResDtos);
-        getPostResDto.setAuthor(author);
-        getPostResDto.setCategory(category);
-
-        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE, getPostResDto);
+    List<Image> images = post.getImages();
+    List<ImageResDto> imageResDtos = new ArrayList<>();
+    for (Image image : images) {
+        ImageResDto imageResDto = new ImageResDto();
+        imageResDto.setUrl(image.getUrlImage());
+        imageResDto.setId(String.valueOf(image.getId()));
+        imageResDtos.add(imageResDto);
     }
+    List<Video> videos = post.getVideos();
+    List<VideoResDto> videoResDtos = new ArrayList<>();
+    for (Video video : videos) {
+        VideoResDto videoResDto = new VideoResDto();
+        videoResDto.setUrl(video.getUrl());
+        videoResDto.setThumb(video.getThumb());
+        videoResDtos.add(videoResDto);
+    }
+
+    Author author = new Author();
+    author.setId(String.valueOf(user.getId()));
+    author.setName(user.getUsername());
+    author.setAvatar(user.getAvatar());
+    author.setCoins(String.valueOf(user.getCoins()));
+    author.setListings(user.getListing().toString());
+    System.out.println(author);
+
+    Category category = new Category();
+    category.setId(category.getId());
+    category.setName(category.getName());
+    category.setHas_name(category.getHas_name());
+    System.out.println(category);
+    GetPostResDto getPostResDto = new GetPostResDto();
+    getPostResDto.setId(post.getId());
+    getPostResDto.setUrl(post.getUrl());
+    getPostResDto.setCreated(String.valueOf(post.getCreated()));
+    getPostResDto.setModified(String.valueOf(post.getModified()));
+    getPostResDto.setDisappointed(String.valueOf(post.getDissapointed()));
+    getPostResDto.setKudos(String.valueOf(post.getKudos()));
+    getPostResDto.setFake(String.valueOf(Long.valueOf(post.getFake())));
+    getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
+    getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
+    getPostResDto.setIsRated(String.valueOf(post.isRated()));
+    getPostResDto.setImage((Image) imageResDtos);
+    getPostResDto.setVideo((Video) videoResDtos);
+    getPostResDto.setAuthor(author);
+    getPostResDto.setCategory(category);
+    System.out.println(getPostResDto);
+    return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, getPostResDto);
+
+} catch (RuntimeException e) {
+    return new GeneralResponse(ResponseCode.POST_NOT_EXIST, ResponseMessage.POST_NOT_EXIST, "");
+}
+        }
 
 
     @Override
