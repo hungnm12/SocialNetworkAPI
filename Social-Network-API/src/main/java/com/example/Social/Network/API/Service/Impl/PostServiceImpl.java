@@ -175,35 +175,37 @@ private MarkRepo markRepo;
             return new GeneralResponse(ResponseCode.ACTION_BEEN_DONE_PRE, ResponseMessage.ACTION_BEEN_DONE_PRE, "");
 
         }
-        System.out.println("123");
-try {
 
-    Post post = postRepo.findById(Id).orElseThrow();
-    System.out.println("123123213");
+        Post post = postRepo.findById(Id).orElseThrow();
+try { }
+catch (RuntimeException e) {
+        return new GeneralResponse(ResponseCode.POST_NOT_EXIST, ResponseMessage.POST_NOT_EXIST, "");
+    }
 
     List<Image> images = post.getImages();
-    List<ImageResDto> imageResDtos = new ArrayList<>();
-    for (Image image : images) {
-        ImageResDto imageResDto = new ImageResDto();
-        imageResDto.setUrl(image.getUrlImage());
-        imageResDto.setId(String.valueOf(image.getId()));
-        imageResDtos.add(imageResDto);
-    }
+
+//    for (Image image : images) {
+//        ImageResDto imageResDto = new ImageResDto();
+//        imageResDto.setUrl(image.getUrlImage());
+//        imageResDto.setId(String.valueOf(image.getId()));
+//        imageResDtos.add(imageResDto);
+//    }
+
     List<Video> videos = post.getVideos();
-    List<VideoResDto> videoResDtos = new ArrayList<>();
-    for (Video video : videos) {
-        VideoResDto videoResDto = new VideoResDto();
-        videoResDto.setUrl(video.getUrl());
-        videoResDto.setThumb(video.getThumb());
-        videoResDtos.add(videoResDto);
-    }
+//    List<VideoResDto> videoResDtos = new ArrayList<>();
+//    for (Video video : videos) {
+//        VideoResDto videoResDto = new VideoResDto();
+//        videoResDto.setUrl(video.getUrl());
+//        videoResDto.setThumb(video.getThumb());
+//        videoResDtos.add(videoResDto);
+//    }
 
     Author author = new Author();
     author.setId(String.valueOf(user.getId()));
     author.setName(user.getUsername());
     author.setAvatar(user.getAvatar());
     author.setCoins(String.valueOf(user.getCoins()));
-    author.setListings(user.getListing().toString());
+//    author.setListings(user.getListing().toString());
     System.out.println(author);
 
     Category category = new Category();
@@ -218,20 +220,21 @@ try {
     getPostResDto.setModified(String.valueOf(post.getModified()));
     getPostResDto.setDisappointed(String.valueOf(post.getDissapointed()));
     getPostResDto.setKudos(String.valueOf(post.getKudos()));
-    getPostResDto.setFake(String.valueOf(Long.valueOf(post.getFake())));
-    getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
+//    getPostResDto.setFake(String.valueOf(Long.valueOf(post.getFake())));
+        getPostResDto.setFake("");
+//    getPostResDto.setTrust(String.valueOf(Long.valueOf(post.getTrust())));
+        getPostResDto.setTrust("");
     getPostResDto.setIsMarked(String.valueOf(post.isMarked()));
     getPostResDto.setIsRated(String.valueOf(post.isRated()));
-    getPostResDto.setImage((Image) imageResDtos);
-    getPostResDto.setVideo((Video) videoResDtos);
+    getPostResDto.setImage(images);
+    getPostResDto.setVideo(videos);
     getPostResDto.setAuthor(author);
     getPostResDto.setCategory(category);
     System.out.println(getPostResDto);
     return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, getPostResDto);
 
-} catch (RuntimeException e) {
-    return new GeneralResponse(ResponseCode.POST_NOT_EXIST, ResponseMessage.POST_NOT_EXIST, "");
-}
+
+
         }
 
 
