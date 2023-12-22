@@ -6,6 +6,7 @@ import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 import com.example.Social.Network.API.Service.AccountService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sun.tools.javac.Main;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.net.ssl.HttpsURLConnection;
 //import java.net.http.HttpRequest;
+import java.io.File;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -39,6 +41,7 @@ public class AccountController {
     public GeneralResponse signUp(@RequestBody SignInReqDto signInDto) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
 
         try {
+
             return accountService.login(signInDto);
         }
         catch (ResponseException e) {
