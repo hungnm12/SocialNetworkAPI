@@ -514,6 +514,7 @@ catch (RuntimeException e) {
     {
         return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID);
     }
+
     if(setMarkCommentReqDto.getId()==null || setMarkCommentReqDto.getIndex() == null|| setMarkCommentReqDto.getIndex() < 0 || setMarkCommentReqDto.getCount() == null || setMarkCommentReqDto.getCount() < 1 )
     {
         return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID,ResponseMessage.PARAMETER_VALUE_NOT_VALID);
@@ -578,12 +579,14 @@ catch (RuntimeException e) {
                 .userMark(user)
                 .typeOfMark(setMarkCommentReqDto.getType().equals("0") ?"Fake" : "Trust")
                 .build();
+
+
         var coins = user.getCoins();
         user.setCoins(coins-1);
         userRepo.save(user);
         markRepo.save(mark);
         var listComments = commentRepo.getCommentsByPost(post.get(),pageable);
-        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, new CommentResDto());
+        return new GeneralResponse(ResponseCode.OK_CODE, ResponseMessage.OK_CODE, listComments);
 
 
     }

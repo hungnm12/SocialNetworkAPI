@@ -130,4 +130,16 @@ public class AccountController {
         }
 
     }
+    @PostMapping("/check_new_version")
+    public GeneralResponse checkNewVersion(@RequestParam("token") String token,@RequestParam("last_update") String last_update) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException {
+
+        try {
+
+            return accountService.checkNewVersion(token,last_update);
+        }
+        catch (ResponseException e) {
+            return new GeneralResponse(HttpsURLConnection.HTTP_NO_CONTENT, "" , e.getMessage(), null);
+        }
+
+    }
 }

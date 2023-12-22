@@ -49,7 +49,11 @@ public class ConversationServiceImpl implements ConservationService {
 
 
         User user = getUserFromToken(jwtService,userRepo, getListConversationReqDto.getToken());
+        if(user==null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
 
+        }
         if (!jwtService.isTokenValid(getListConversationReqDto.getToken() , user)){
             return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"");
         }

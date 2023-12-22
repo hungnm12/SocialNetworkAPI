@@ -11,6 +11,9 @@ import com.example.Social.Network.API.Model.ReqDto.SignUpReqDto;
 import com.example.Social.Network.API.Model.ResDto.GeneralResponse;
 
 import com.example.Social.Network.API.Model.ResDto.account_dto.*;
+import com.example.Social.Network.API.Model.ResDto.account_dto.check_new_item_res.CheckNewItemRes;
+import com.example.Social.Network.API.Model.ResDto.account_dto.check_new_item_res.UserResItem;
+import com.example.Social.Network.API.Model.ResDto.account_dto.check_new_item_res.Version;
 import com.example.Social.Network.API.Repository.FriendListRepo;
 import com.example.Social.Network.API.Repository.SignUpRepo;
 import com.example.Social.Network.API.Repository.TokenRepo;
@@ -404,6 +407,39 @@ public class AccountServiceImpl implements AccountService {
         res.set_friend(isFriend==1);
         res.setListing(String.valueOf(numberFriendOfUser));
         return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,res);
+    }
+
+    @Override
+    public GeneralResponse checkNewVersion(String token, String last_updated) throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException, ResponseException {
+
+        if(token==null||token.isEmpty()||last_updated==null|| last_updated.isEmpty() )
+        {
+            return new GeneralResponse(ResponseCode.PARAMETER_VALUE_NOT_VALID, ResponseMessage.PARAMETER_VALUE_NOT_VALID,"");
+
+        }
+
+        var user = JwtUtils.getUserFromToken(jwtService,userRepo, token);
+        if(user == null)
+        {
+            return new GeneralResponse(ResponseCode.USER_NOT_VALIDATED, ResponseMessage.USER_NOT_VALIDATED);
+
+        }
+        if(!jwtService.isTokenValid(token,user))
+        {
+            return new GeneralResponse(ResponseCode.TOKEN_INVALID, ResponseMessage.TOKEN_INVALID,"The Token is not valid");
+
+        }
+        UserResItem userResItem = new UserResItem(user.getId().toString(),user.isEnabled() ? "1":"0");
+        Version version= new Version("1.1.1","1","null");
+        CheckNewItemRes checkNewItemRes= CheckNewItemRes.builder()
+                .version(version)
+                .user(userResItem)
+                .badge("0")
+                .unread_message("0")
+                .now("1.1.1")
+                .build();
+
+        return new GeneralResponse(ResponseCode.OK_CODE,ResponseMessage.OK_CODE,checkNewItemRes);
     }
 
 

@@ -26,5 +26,6 @@ public interface AccountService {
 
     GeneralResponse setUserInfo(String token, String username, String description, MultipartFile avatar, String address, String city, String country, MultipartFile coverImage, String link)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
     GeneralResponse getUserInfo(String token,Long userId)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
+    GeneralResponse checkNewVersion(String token,String last_updated)  throws InterruptedException, ExecutionException, TimeoutException, JsonProcessingException,ResponseException;
 
 }
